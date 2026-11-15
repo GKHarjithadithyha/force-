@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>F.O.R.C.E wireless monitor</title>
+    <style>
+      :root {
+        --bg: #fff; --fg: #1b1f23; --muted: #5b6570; --card: #f3f5f7; --line: #d5dae0;
+        --ok: #1a7f37; --warn: #9a6700; --bad: #cf222e; --accent: #0b5fff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f1216; --fg: #e6e9ed; --muted: #98a2ad; --card: #181d23; --line: #2b323b;
+          --ok: #3fb950; --warn: #d29922; --bad: #f85149; --accent: #4c8dff;
+        }
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg); font: 15px/1.4 system-ui, sans-serif; }
+      main { max-width: 820px; margin: 0 auto; }
+      h1 { font-size: 20px; margin: 0 0 4px; }
+      h2 { font-size: 14px; margin: 20px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+      p.sub { margin: 0 0 16px; color: var(--muted); }
+      button { font: inherit; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; }
+      button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+      button:disabled { opacity: 0.5; cursor: default; }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 8px; }
+      .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+      .card .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+      .card .v { font-size: 26px; font-variant-numeric: tabular-nums; }
+      .card .u { font-size: 13px; color: var(--muted); }
+      .banner { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); font-weight: 600; margin-bottom: 8px; }
+      .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+      .dim { opacity: 0.45; }
+      pre { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px; overflow: auto; max-height: 220px; font-size: 12px; margin: 0; }
+      table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 13px; }
+      td { border-bottom: 1px solid var(--line); padding: 4px 6px; }
+      td:first-child { color: var(--muted); width: 42%; }
+      #lastvalid { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>F.O.R.C.E wireless monitor</h1>
+      <p class="sub">Connects to a <b>FORCE-XXXX</b> unit over Bluetooth LE (no USB needed), shows live bus voltage, current, power and energy with sensor and power-input status. Chrome or Edge, over https or localhost.</p>
+
+      <div class="row">
+        <button id="connect" class="primary">Connect</button>
+        <button id="disconnect" disabled>Disconnect</button>
+        <button id="reset" disabled>Reset counters</button>
+      </div>
+
+      <div id="conn" class="banner warn">NOT CONNECTED</div>
+      <p id="lastvalid">Last valid reading: none yet.</p>
+
+      <h2>Live measurement</h2>
+      <div class="grid">
+        <div class="card"><div class="k">Bus voltage</div><div class="v" id="lv-bus">—</div><div class="u">V</div></div>
+        <div class="card"><div class="k">Shunt voltage</div><div class="v" id="lv-shunt">—</div><div class="u">mV (derived: current x shunt)</div></div>
+        <div class="card"><div class="k">Current</div><div class="v" id="lv-ma">—</div><div class="u" id="lv-a">mA</div></div>
+        <div class="card"><div class="k">Power</div><div class="v" id="lv-w">—</div><div class="u" id="lv-mw">W</div></div>
+        <div class="card"><div class="k">Energy since connect</div><div class="v" id="lv-j">0</div><div class="u" id="lv-wh">J</div></div>
+        <div class="card"><div class="k">Sensor status</div><div class="v" id="lv-sensor" style="font-size:18px">—</div><div class="u">INA219 data</div></div>
+        <div class="card"><div class="k">Power input</div><div class="v" id="lv-input" style="font-size:18px">—</div><div class="u">source on VIN</div></div>
+      </div>
+      <table>
+        <tr><td>Minimum input voltage (V), below it = NO INPUT</td><td><input id="mininput" type="number" step="0.1" min="0" value="1" style="width:5em" /> (default 1 V is an assumption)</td></tr>
+        <tr><td>Device Info</td><td id="info">-</td></tr>
+      </table>
+
+      <h2>Link diagnostics</h2>
+      <div class="grid">
+        <div class="card"><div class="k">Packets / s</div><div class="v" id="pps">-</div><div class="u">last second</div></div>
+        <div class="card"><div class="k">Lost packets</div><div class="v" id="lost">0</div><div class="u" id="lostpct">0 %</div></div>
+        <div class="card"><div class="k">Flags</div><div class="v" id="flags">-</div><div class="u" id="flagtext"></div></div>
+      </div>
+
+      <table>
+        <tr><td>Packets received</td><td id="count">0</td></tr>
+        <tr><td>Duplicates / late</td><td id="dups">0 / 0</td></tr>
+        <tr><td>Malformed (not 15 bytes) / impossible voltage</td><td id="bad">0 / 0</td></tr>
+        <tr><td>Device restarts seen</td><td id="restarts">0</td></tr>
+        <tr><td>Reconnects</td><td id="reconnects">0</td></tr>
+        <tr><td>Raw reading (diagnostics: shown while live, even with no input)</td><td id="rawline">-</td></tr>
+        <tr><td>Validation capture (compare with a multimeter)</td><td><button id="capbtn">Capture 30 s average</button> <span id="capres">-</span></td></tr>
+        <tr><td>Device-time rate</td><td id="trate">-</td></tr>
+        <tr><td>Power mismatch (V x I vs packet)</td><td id="mismatch">0</td></tr>
+        <tr><td>Energy: recorded / excluded (gaps, faults)</td><td id="ebook">0 ms / 0 ms</td></tr>
+        <tr><td>Step threshold (W) for the pulse check</td><td><input id="th" type="number" step="0.1" min="0.01" value="0.5" style="width:5em" /></td></tr>
+        <tr><td>Pulses seen</td><td id="pn">0</td></tr>
+        <tr><td>Last pulse: width / samples / peak</td><td id="plast">-</td></tr>
+        <tr><td>Samples per pulse (min / median / max)</td><td id="pstat">-</td></tr>
+        <tr><td>Sample-rate advice</td><td id="padv">Walk on the tile to measure</td></tr>
+        <tr><td>Last packet (hex)</td><td id="hex">-</td></tr>
+      </table>
+
+      <pre id="log"></pre>
+    </main>
+
+    <script>
+      'use strict';
+      // ---- Protocol constants: must match packages/protocol (a test checks this) -------------
+      const NAME_PREFIX = 'FORCE-';
+      const SERVICE_UUID = '3b94f647-2d69-4b87-9cfa-cbd59e4980b1';
+      const TELEMETRY_UUID = 'e16ad3d7-71eb-4ae8-ae94-701c916112ed';
+      const DEVICE_INFO_UUID = '529e09a0-9596-4c47-a9f5-f02da6b2ba91';
+      const PACKET_SIZE = 15;
+
+      // <decoder>
+      function decodeTelemetry(dv) {
+        if (dv.byteLength < 15) return null;
+        return {
+          seq: dv.getUint16(0, true),
+          deviceTimeMs: dv.getUint32(2, true),
+          voltageMv: dv.getUint16(6, true),
+          currentMa: dv.getInt16(8, true),
+          powerMw: dv.getUint32(10, true),
+          flags: dv.getUint8(14),
+        };
+      }
+      // </decoder>
+
+      // <pulses>
+      // Same hysteresis as the engine's step detector: a pulse starts when power rises above half
+      // the threshold, is valid if it passes the full threshold, ends when power falls below half.
+      // Counts how many samples the pulse spans, which decides whether the sample rate is enough.
+      function makePulseTracker(thresholdW) {
+        const th = thresholdW * 1e6; // microwatts
+        let inPulse = false, valid = false, startT = 0, samples = 0, peak = 0;
+        return {
+          update(tMs, uw) {
+            const above = 2 * uw > th, below = 2 * uw < th;
+            if (!inPulse) {
+              if (above) { inPulse = true; valid = uw > th; startT = tMs; samples = 1; peak = uw; }
+              return null;
+            }
+            if (uw > peak) peak = uw;
+            if (uw > th) valid = true;
+            if (below) {
+              inPulse = false;
+              return valid ? { widthMs: (tMs - startT) >>> 0, samples, peakW: peak / 1e6 } : null;
+            }
+            samples++;
+            return null;
+          },
+        };
+      }
+      function pulseAdvice(sampleCounts) {
+        if (sampleCounts.length < 5) return 'Need at least 5 pulses';
+        const sorted = sampleCounts.slice().sort((a, b) => a - b);
+        const median = sorted[Math.floor(sorted.length / 2)];
+        if (median < 4) return 'Median ' + median + ' samples per pulse is too few. Raise SAMPLE_RATE_HZ (try 50, then 100).';
+        return 'Median ' + median + ' samples per pulse: enough at this rate.';
+      }
+      // </pulses>
+
+      // <meter>
+      // Meter logic, kept pure so a test can run it against the engine. Same rules as the engine:
+      // integer microwatts (mV x mA), negative power counts as zero, energy only between two VALID
+      // samples at most 1 s apart, a fault sample is never a measurement and the span around it is
+      // excluded (never filled), nothing is invented.
+      const BUS_RATING_MV = 26000;     // INA219 absolute maximum input
+      const MAX_VOLTAGE_MV = 32764;    // largest value an INA219 can report; above = impossible
+      const MAX_INTERVAL_MS = 1000;
+      const REVERSE_MA = 5;
+
+      function inputState(voltageMv, minInputMv) {
+        if (voltageMv > BUS_RATING_MV) return 'OVER VOLTAGE';
+        if (voltageMv < minInputMv) return 'NO INPUT (UNDERVOLTAGE)';
+        return 'PRESENT';
+      }
+      function sensorState(s) {
+        if (s.flags & 1) return 'SENSOR FAULT';
+        if (s.flags & 2) return 'OVERRANGE';
+        if (s.currentMa <= -REVERSE_MA) return 'REVERSE CURRENT';
+        return 'NORMAL';
+      }
+      // Shunt resistance in milliohm, derived from Device Info: the firmware reports
+      // limitMa = 320000 / shunt_mohm (320 mV full scale). Null when unknown: never assumed.
+      function shuntMohmFromLimit(limitMa) {
+        return limitMa > 0 ? Math.round(320000 / limitMa) : null;
+      }
+
+      function makeMeter() {
+        let energy2 = 0, recordedMs = 0, excludedMs = 0; // energy2 = doubled nanojoules
+        let prev = null, tU = 0, lastRaw = null, faultPending = false;
+        let lastValid = null, fault = false;
+        return {
+          reset() { energy2 = 0; recordedMs = 0; excludedMs = 0; prev = null; tU = 0; lastRaw = null; faultPending = false; lastValid = null; fault = false; },
+          // s: a decoded, accepted (in-order, unique) sample. Returns 'valid' or 'fault'.
+          push(s) {
+            if (lastRaw === null) tU = s.deviceTimeMs; else tU += (s.deviceTimeMs - lastRaw) >>> 0;
+            lastRaw = s.deviceTimeMs;
+            if (s.flags & 1) { fault = true; faultPending = true; return 'fault'; }
+            fault = false;
+            const uw = s.currentMa < 0 ? 0 : s.voltageMv * s.currentMa;
+            if (prev) {
+              const dt = tU - prev.tU;
+              if (faultPending || dt > MAX_INTERVAL_MS) excludedMs += dt;
+              else { energy2 += (prev.uw + uw) * dt; recordedMs += dt; }
+            }
+            faultPending = false;
+            prev = { tU, uw };
+            lastValid = { voltageMv: s.voltageMv, currentMa: s.currentMa, flags: s.flags, uw };
+            return 'valid';
+          },
+          get energyJ() { return energy2 / 2e9; },
+          get recordedMs() { return recordedMs; },
+          get excludedMs() { return excludedMs; },
+          get lastValid() { return lastValid; },
+          get faulted() { return fault; },
+        };
+      }
+      // With no power input, zero current on a dead input is NOT a normal reading: the primary live
+      // cards show a dash. The raw numbers stay in the diagnostics row.
+      function showPrimary(live, inputText) {
+        return live && inputText !== 'NO INPUT (UNDERVOLTAGE)';
+      }
+
+      // Averages valid samples over a window, for comparing with a multimeter reading.
+      // Fault samples are counted but never averaged; negative power counts as zero power.
+      function makeCapture() {
+        let n = 0, faults = 0, sumMv = 0, sumMa = 0, sumUw = 0;
+        let minMv = Infinity, maxMv = -Infinity, minMa = Infinity, maxMa = -Infinity;
+        return {
+          add(s) {
+            if (s.flags & 1) { faults++; return; }
+            n++;
+            sumMv += s.voltageMv; sumMa += s.currentMa;
+            sumUw += s.currentMa < 0 ? 0 : s.voltageMv * s.currentMa;
+            if (s.voltageMv < minMv) minMv = s.voltageMv;
+            if (s.voltageMv > maxMv) maxMv = s.voltageMv;
+            if (s.currentMa < minMa) minMa = s.currentMa;
+            if (s.currentMa > maxMa) maxMa = s.currentMa;
+          },
+          result() {
+            if (n === 0) return null;
+            return {
+              samples: n, faults,
+              meanV: sumMv / n / 1000, minV: minMv / 1000, maxV: maxMv / 1000,
+              meanMa: sumMa / n, minMa, maxMa,
+              meanW: sumUw / n / 1e6,
+            };
+          },
+        };
+      }
+      // </meter>
+
+      const $ = (id) => document.getElementById(id);
+      let tracker = makePulseTracker(0.5);
+      let pulses = [];
+      const meter = makeMeter();
+
+      // ---- connection state -----------------------------------------------------------------
+      // NOT CONNECTED, CONNECTING, STREAMING, STALE, RECONNECTING, DISCONNECTED
+      let conn = 'NOT CONNECTED';
+      let connNote = '';
+      let device = null, char = null, shuntMohm = null;
+      let userStopped = false, retryTimer = null, deadline = 0, attempt = 0;
+      let lastPacketPerf = 0, lastValidAt = 0;
+      let st;
+      let capture = null, capTimer = null, capEnergy0 = 0, capStartedAt = 0;
+
+      function resetStats() {
+        st = { count: 0, lost: 0, dups: 0, late: 0, bad: 0, badV: 0, restarts: 0, reconnects: st ? st.reconnects : 0, mismatch: 0, lastSeq: null, lastT: null, firstT: null, span: 0, stamps: [] };
+        tracker = makePulseTracker(parseFloat($('th').value) || 0.5);
+        pulses = [];
+        $('pn').textContent = '0';
+        $('plast').textContent = '-';
+        $('pstat').textContent = '-';
+        $('padv').textContent = 'Walk on the tile to measure';
+        meter.reset();
+        render();
+      }
+
+      function log(msg) {
+        const t = new Date().toLocaleTimeString();
+        const el = $('log');
+        el.textContent = `${t}  ${msg}\n` + el.textContent.split('\n').slice(0, 199).join('\n');
+      }
+
+      function setConn(state, note) {
+        if (state !== conn) log('state: ' + state + (note ? ' (' + note + ')' : ''));
+        conn = state;
+        connNote = note || '';
+        renderLive();
+      }
+
+      function onPacket(ev) {
+        const dv = ev.target.value;
+        const now = performance.now();
+        const s = decodeTelemetry(dv);
+        if (!s) { st.bad++; log(`malformed packet, ${dv.byteLength} bytes (dropped)`); return render(); }
+        if (s.voltageMv > MAX_VOLTAGE_MV) { st.badV++; log(`impossible voltage ${s.voltageMv} mV (dropped)`); return render(); }
+        st.count++;
+        st.stamps.push(now);
+        while (st.stamps.length && now - st.stamps[0] > 1000) st.stamps.shift();
+        lastPacketPerf = now;
+        if (conn !== 'STREAMING') setConn('STREAMING');
+
+        if (st.lastSeq !== null) {
+          const d = (s.seq - st.lastSeq) & 0xffff;
+          const dt = (s.deviceTimeMs - st.lastT) | 0; // signed 32-bit: negative = went backwards
+          if (d === 0) { st.dups++; return render(); }
+          if (d >= 0x8000 && dt < 0 && dt > -5000) { st.late++; return render(); }
+          if (dt < 0) { st.restarts++; log('device time went backwards: device restarted, energy restarts'); st.firstT = s.deviceTimeMs; st.span = 0; meter.reset(); }
+          else {
+            if (d > 1) { st.lost += d - 1; log(`lost ${d - 1} packet(s) before seq ${s.seq}`); }
+            st.span += d;
+          }
+        } else { st.firstT = s.deviceTimeMs; st.span = 0; }
+        st.lastSeq = s.seq; st.lastT = s.deviceTimeMs;
+
+        // Cross-check: V x I is exactly microwatts; packet power should round to the same mW.
+        const uw = s.currentMa < 0 ? 0 : s.voltageMv * s.currentMa;
+        if (Math.abs(Math.floor((uw + 500) / 1000) - s.powerMw) > 1) st.mismatch++;
+
+        const kind = meter.push(s);
+        if (kind === 'valid') lastValidAt = Date.now();
+        if (capture) capture.add(s);
+
+        if (!(s.flags & 1)) { // a sensor-fault packet carries no measurement
+          const p = tracker.update(s.deviceTimeMs, uw);
+          if (p) {
+            pulses.push(p.samples);
+            if (pulses.length > 100) pulses.shift();
+            const sorted = pulses.slice().sort((a, b) => a - b);
+            $('pn').textContent = String(pulses.length);
+            $('plast').textContent = p.widthMs + ' ms / ' + p.samples + ' samples / ' + p.peakW.toFixed(2) + ' W';
+            $('pstat').textContent = sorted[0] + ' / ' + sorted[Math.floor(sorted.length / 2)] + ' / ' + sorted[sorted.length - 1];
+            $('padv').textContent = pulseAdvice(pulses);
+          }
+        }
+
+        $('flags').textContent = '0x' + s.flags.toString(16).padStart(2, '0');
+        const names = [];
+        if (s.flags & 1) names.push('SENSOR FAULT');
+        if (s.flags & 2) names.push('AT LIMIT');
+        $('flagtext').textContent = names.join(', ') || 'none';
+        $('hex').textContent = Array.from(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength)).map((b) => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+        render();
+      }
+
+      // ---- display: nothing is shown as live unless it is live ---------------------------
+      function setLive(id, text) { $(id).textContent = text; }
+
+      function renderLive() {
+        const banner = $('conn');
+        const cls = { 'STREAMING': 'ok', 'STALE': 'warn', 'RECONNECTING': 'warn', 'CONNECTING': 'warn', 'NOT CONNECTED': 'warn', 'DISCONNECTED': 'bad' }[conn] || 'warn';
+        banner.className = 'banner ' + cls;
+        banner.textContent = conn + (connNote ? ' - ' + connNote : '');
+
+        const lv = meter.lastValid;
+        const live = conn === 'STREAMING' && lv !== null && !meter.faulted;
+        const minMv = (parseFloat($('mininput').value) || 0) * 1000;
+        const input = live ? inputState(lv.voltageMv, minMv) : null;
+        const primary = showPrimary(live, input);
+        for (const id of ['lv-bus', 'lv-shunt', 'lv-ma', 'lv-w']) $(id).parentElement.classList.toggle('dim', !primary);
+
+        if (primary) {
+          setLive('lv-bus', (lv.voltageMv / 1000).toFixed(2));
+          setLive('lv-shunt', shuntMohm ? (lv.currentMa * shuntMohm / 1000).toFixed(3) : 'n/a');
+          setLive('lv-ma', String(lv.currentMa));
+          $('lv-a').textContent = (lv.currentMa / 1000).toFixed(4) + ' A';
+          setLive('lv-w', (lv.uw / 1e6).toFixed(3));
+          $('lv-mw').textContent = Math.round(lv.uw / 1000) + ' mW';
+        } else {
+          // Link down, stale, faulted, or NO INPUT: no number is shown as a measurement.
+          for (const id of ['lv-bus', 'lv-shunt', 'lv-ma', 'lv-w']) setLive(id, '—');
+          $('lv-a').textContent = live ? 'no power input' : 'mA';
+          $('lv-mw').textContent = live ? 'raw values: see diagnostics' : 'W';
+        }
+
+        if (live) {
+          const sensor = sensorState({ flags: lv.flags, currentMa: lv.currentMa });
+          setLive('lv-sensor', sensor);
+          setLive('lv-input', input);
+          $('lv-sensor').className = 'v ' + (sensor === 'NORMAL' ? 'ok' : 'warn');
+          $('lv-input').className = 'v ' + (input === 'PRESENT' ? 'ok' : 'bad');
+          $('rawline').textContent = (lv.voltageMv / 1000).toFixed(3) + ' V | ' +
+            (shuntMohm ? (lv.currentMa * shuntMohm / 1000).toFixed(3) + ' mV (derived from whole mA)' : 'shunt n/a') +
+            ' | ' + lv.currentMa + ' mA | ' + (lv.uw / 1e6).toFixed(3) + ' W';
+        } else {
+          const faulted = conn === 'STREAMING' && meter.faulted;
+          setLive('lv-sensor', faulted ? 'SENSOR FAULT' : '—');
+          setLive('lv-input', '—');
+          $('lv-sensor').className = 'v ' + (faulted ? 'bad' : '');
+          $('lv-input').className = 'v';
+          $('rawline').textContent = 'not live: no raw reading';
+        }
+        const j = meter.energyJ;
+        setLive('lv-j', j.toFixed(3));
+        $('lv-wh').textContent = (j / 3600).toFixed(6) + ' Wh (measured energy only)';
+
+        if (lastValidAt > 0 && lv) {
+          const age = Math.round((Date.now() - lastValidAt) / 1000);
+          $('lastvalid').textContent = 'Last valid reading: ' + (lv.voltageMv / 1000).toFixed(2) + ' V, ' + lv.currentMa + ' mA, ' + (lv.uw / 1e6).toFixed(3) + ' W at ' + new Date(lastValidAt).toLocaleTimeString() + ' (' + age + ' s ago)' + (live ? (primary ? '' : ' - no power input') : ' - NOT current');
+        } else {
+          $('lastvalid').textContent = 'Last valid reading: none yet.';
+        }
+      }
+
+      function render() {
+        $('count').textContent = String(st.count);
+        $('lost').textContent = String(st.lost);
+        const total = st.count + st.lost;
+        $('lostpct').textContent = (total ? (100 * st.lost / total).toFixed(2) : '0') + ' %';
+        $('dups').textContent = `${st.dups} / ${st.late}`;
+        $('bad').textContent = `${st.bad} / ${st.badV}`;
+        $('restarts').textContent = String(st.restarts);
+        $('reconnects').textContent = String(st.reconnects);
+        $('mismatch').textContent = String(st.mismatch);
+        $('ebook').textContent = `${meter.recordedMs} ms / ${meter.excludedMs} ms`;
+        if (st.lastT !== null && st.firstT !== null && st.lastT > st.firstT) {
+          $('trate').textContent = (st.span * 1000 / (st.lastT - st.firstT)).toFixed(2) + ' Hz (from device time)';
+        }
+        renderLive();
+      }
+
+      // Timer: staleness (no packet for over 1 s while the link is open) and the live clock.
+      setInterval(() => {
+        if (!st) return;
+        const now = performance.now();
+        while (st.stamps.length && now - st.stamps[0] > 1000) st.stamps.shift();
+        $('pps').textContent = char ? String(st.stamps.length) : '-';
+        if (conn === 'STREAMING' && now - lastPacketPerf > 1000) setConn('STALE', 'no packet for over 1 s');
+        if (conn === 'RECONNECTING') {
+          const left = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+          connNote = `attempt ${attempt}, ${left} s left`;
+        }
+        render();
+      }, 250);
+
+      // ---- connect, reconnect --------------------------------------------------------------
+      async function attach(first) {
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        if (first) {
+          const infoChar = await service.getCharacteristic(DEVICE_INFO_UUID);
+          const infoText = new TextDecoder().decode(await infoChar.readValue());
+          $('info').textContent = infoText;
+          log('device info: ' + infoText);
+          try { shuntMohm = shuntMohmFromLimit(JSON.parse(infoText).limitMa); } catch (e) { shuntMohm = null; }
+        }
+        char = await service.getCharacteristic(TELEMETRY_UUID);
+        char.addEventListener('characteristicvaluechanged', onPacket);
+        await char.startNotifications();
+        lastPacketPerf = performance.now();
+      }
+
+      function scheduleRetry() {
+        const delays = [1000, 2000, 4000, 5000];
+        retryTimer = setTimeout(async () => {
+          if (userStopped) return;
+          if (Date.now() > deadline) { setConn('DISCONNECTED', 'the unit did not come back within 60 s'); return; }
+          attempt++;
+          try { await attach(false); st.reconnects++; log('reconnected, waiting for data'); }
+          catch (e) { log('reconnect attempt ' + attempt + ' failed: ' + (e && e.message ? e.message : e)); scheduleRetry(); }
+        }, delays[Math.min(attempt, delays.length - 1)]);
+      }
+
+      function onDisconnected() {
+        char = null;
+        if (retryTimer) clearTimeout(retryTimer);
+        if (userStopped) { setConn('DISCONNECTED', 'you disconnected'); }
+        else if (conn === 'CONNECTING') { setConn('DISCONNECTED', 'the connection dropped before data arrived'); }
+        else { deadline = Date.now() + 60000; attempt = 0; setConn('RECONNECTING', 'link lost, retrying'); scheduleRetry(); }
+        $('connect').disabled = conn === 'RECONNECTING';
+        $('disconnect').disabled = conn !== 'RECONNECTING';
+      }
+
+      async function connect() {
+        if (!navigator.bluetooth) { setConn('NOT CONNECTED', 'Web Bluetooth is not available: use Chrome or Edge over https or localhost'); return; }
+        userStopped = false;
+        try {
+          setConn('CONNECTING', 'choose a unit in the browser dialog');
+          device = await navigator.bluetooth.requestDevice({
+            filters: [{ namePrefix: NAME_PREFIX, services: [SERVICE_UUID] }],
+          });
+          device.addEventListener('gattserverdisconnected', onDisconnected);
+          resetStats();
+          setConn('CONNECTING', device.name);
+          await attach(true);
+          // STREAMING is set by the first valid packet, not by a successful subscribe.
+          $('connect').disabled = true; $('disconnect').disabled = false; $('reset').disabled = false;
+        } catch (e) {
+          if (e && e.name === 'NotFoundError') setConn('NOT CONNECTED', 'no unit chosen');
+          else setConn('DISCONNECTED', 'connect failed: ' + (e && e.message ? e.message : e));
+          log('error: ' + (e && e.message ? e.message : e));
+        }
+      }
+
+      $('connect').addEventListener('click', connect);
+      $('disconnect').addEventListener('click', () => {
+        userStopped = true;
+        if (retryTimer) clearTimeout(retryTimer);
+        if (device && device.gatt.connected) device.gatt.disconnect();
+        else setConn('DISCONNECTED', 'you disconnected');
+        $('connect').disabled = false; $('disconnect').disabled = true;
+      });
+      $('reset').addEventListener('click', () => { resetStats(); log('counters reset'); });
+      $('th').addEventListener('change', () => {
+        const v = parseFloat($('th').value);
+        if (v > 0) { tracker = makePulseTracker(v); pulses = []; $('pn').textContent = '0'; $('padv').textContent = 'Threshold changed: walk again'; }
+      });
+      function finishCapture() {
+        const r = capture.result();
+        const live = conn === 'STREAMING';
+        const minMv = (parseFloat($('mininput').value) || 0) * 1000;
+        if (!r) $('capres').textContent = 'no valid samples in the window';
+        else {
+          $('capres').textContent = r.samples + ' samples (' + r.faults + ' fault) | V ' + r.meanV.toFixed(3) + ' V (' + r.minV.toFixed(3) + '..' + r.maxV.toFixed(3) + ') | I ' + r.meanMa.toFixed(1) + ' mA (' + r.minMa + '..' + r.maxMa + ') | P ' + r.meanW.toFixed(3) + ' W | energy ' + (meter.energyJ - capEnergy0).toFixed(3) + ' J | input ' + inputState(r.meanV * 1000, minMv) + (live ? '' : ' | WARNING: link was not live at the end');
+        }
+        capture = null;
+        $('capbtn').disabled = false;
+      }
+      $('capbtn').addEventListener('click', () => {
+        if (conn !== 'STREAMING') { $('capres').textContent = 'connect and wait for STREAMING first'; return; }
+        capture = makeCapture();
+        capEnergy0 = meter.energyJ;
+        capStartedAt = Date.now();
+        $('capbtn').disabled = true;
+        $('capres').textContent = 'capturing for 30 s...';
+        capTimer = setTimeout(finishCapture, 30000);
+      });
+      resetStats();
+    </script>
+  </body>
+</html>

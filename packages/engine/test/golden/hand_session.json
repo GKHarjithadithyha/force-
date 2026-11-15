@@ -1,0 +1,27 @@
+{
+  "description": "Five samples, calculated by hand. No code was used to derive the expected values.",
+  "deviceId": "FORCE-GOLD",
+  "arrivalMsAtFirstSample": 1700000000000,
+  "profile": { "stepThresholdW": 1.0, "idleThresholdW": 0.1 },
+  "samples": [
+    { "seq": 0, "t": 0, "mV": 5000, "mA": 0 },
+    { "seq": 1, "t": 50, "mV": 5000, "mA": 100 },
+    { "seq": 2, "t": 100, "mV": 5000, "mA": 400 },
+    { "seq": 3, "t": 150, "mV": 5000, "mA": 200 },
+    { "seq": 4, "t": 200, "mV": 5000, "mA": 0 }
+  ],
+  "hand": {
+    "powerW": [0, 0.5, 2.0, 1.0, 0],
+    "workings": "E = sum (P[i-1]+P[i])/2 * dt, dt = 0.05 s: (0+0.5)/2*0.05 = 0.0125; (0.5+2)/2*0.05 = 0.0625; (2+1)/2*0.05 = 0.075; (1+0)/2*0.05 = 0.025; total 0.175 J",
+    "energyJ": 0.175,
+    "recordedMs": 200,
+    "avgPowerW": 0.875,
+    "peakPowerW": 2.0,
+    "steps": 1,
+    "stepWorkings": "Half threshold = 0.5 W. 0.5 W is not above half. 2.0 W at t=100 starts the pulse; 1.0 W continues; 0 W at t=200 closes it. Pulse passed 1.0 W, so valid. Duration 100 ms. Energy over the window: 0.075 + 0.025 = 0.1 J. Average 1.0 W.",
+    "stepStartMs": 100,
+    "stepDurationMs": 100,
+    "stepEnergyJ": 0.1,
+    "stepAvgW": 1.0
+  }
+}

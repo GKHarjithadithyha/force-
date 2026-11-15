@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+.pio
+firmware/**
+tools/**
+docs/*.md
+*.md
+package-lock.json
+packages/protocol/generated
+graphify-out
+.claude
+fedfront

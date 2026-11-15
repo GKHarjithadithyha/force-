@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+storybook-static/
+coverage/
+test-results/
+playwright-report/
+tsconfig.tsbuildinfo
+.env*.local
+.env
+public/sw.js
+public/sw.js.map

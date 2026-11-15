@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# One install at the repo root (npm workspaces: packages/* and fedfront, one package-lock.json).
+jobs:
+  backend:
+    name: Data layer (packages)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Generated protocol files are fresh
+        run: npm run check:generated
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
+
+  frontend:
+    name: Frontend (fedfront)
+    runs-on: ubuntu-latest
+    env:
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run web:typecheck
+      - run: npm run web:lint
+      - name: Unit and mock-engine integration tests (simulated data)
+        run: npm run web:test
+      - name: Production build (real-engine mode; a mock build is refused)
+        run: npm run web:build
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: fedfront
+      - name: Production static-site tests
+        run: npm run web:e2e:static
+      - name: E2E and visual tests (mock mode)
+        run: npm run web:e2e
+      - name: Keep test evidence on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fedfront-test-results
+          path: |
+            fedfront/test-results
+            fedfront/playwright-report
+          if-no-files-found: ignore
+
+  firmware:
+    name: Firmware (host tests and builds)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ hashFiles('firmware/platformio.ini') }}
+      - run: pip install platformio==6.2.0
+      - name: Host-side unit tests (native)
+        run: pio test -d firmware -e native
+      - name: Compile firmware (real sensor)
+        run: pio run -d firmware -e esp32dev
+      - name: Compile firmware (BENCH_MODE)
+        run: pio run -d firmware -e esp32dev_bench
+      - name: Compile firmware (100 Hz)
+        run: pio run -d firmware -e esp32dev_100hz

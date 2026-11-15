@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+.pio/
+.vscode/*.log
+*.tsbuildinfo
+.env
+.DS_Store
+graphify-out/cache/

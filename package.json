@@ -1,0 +1,46 @@
+{
+  "name": "force-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "F.O.R.C.E (Florix Energy): firmware, protocol, data layer, typed seam and the dashboard UI (fedfront).",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "fedfront"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "gen:protocol": "tsx packages/protocol/scripts/generate.ts",
+    "check:generated": "tsx packages/protocol/scripts/generate.ts --check",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
+    "web:typecheck": "npm run typecheck -w fedfront",
+    "web:lint": "npm run lint -w fedfront",
+    "web:test": "npm run test -w fedfront",
+    "web:build": "npm run build -w fedfront",
+    "web:e2e": "npm run test:e2e -w fedfront",
+    "web:e2e:static": "npm run test:static -w fedfront",
+    "check:web": "npm run web:typecheck && npm run web:lint && npm run web:test && npm run web:build",
+    "check:all": "npm run check:generated && npm run check && npm run check:web",
+    "web:hardware-check": "node fedfront/scripts/hardware-browser-check.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.6.6",
+    "eslint": "10.15.0",
+    "fake-indexeddb": "6.2.8",
+    "globals": "17.14.0",
+    "prettier": "3.10.1",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.2",
+    "vitest": "4.1.12"
+  }
+}
