@@ -14,7 +14,8 @@
     "build-storybook": "storybook build",
     "test:e2e": "playwright test --config playwright.config.ts",
     "visual": "playwright test tests/visual.spec.ts",
-    "test:static": "playwright test --config playwright.static.config.ts"
+    "test:static": "playwright test --config playwright.static.config.ts",
+    "hosting:config": "node scripts/hosting-config.mjs"
   },
   "dependencies": {
     "@force/cloud": "*",
