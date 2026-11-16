@@ -22,3 +22,11 @@ export function saveBrandExpansion(value: string): void {
     /* storage unavailable: the value still applies for this visit */
   }
 }
+
+const SCALE_KEY = 'force.displayCalibration';
+export function loadDisplayScaled(): boolean {
+  try { return window.localStorage.getItem(SCALE_KEY) === '1'; } catch { return false; }
+}
+export function saveDisplayScaled(on: boolean): void {
+  try { window.localStorage.setItem(SCALE_KEY, on ? '1' : '0'); } catch { /* storage unavailable: applies for this visit */ }
+}

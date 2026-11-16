@@ -8,6 +8,7 @@ import { useDashboard } from '@/stores/dashboard';
 import type { ChartBatch, GapRecord, HistoryPoint, StepEvent } from '@/contracts';
 import { format } from 'date-fns';
 import { formatEnergy } from '@/lib/format';
+import { scaleFor } from '@/lib/display-scale';
 import { hasHistory } from '@/lib/analytics';
 import { decimateMinMax } from '@/lib/decimate';
 import { readChartPalette, useTheme } from '@/components/theme/theme';
@@ -38,19 +39,20 @@ export interface PowerSeries { times: ArrayLike<number>; powerW: ArrayLike<numbe
  * Power over time. By default it plots the live buffer from the store; pass `series` (with
  * `steps`/`gaps`) to plot a stored session instead.
  */
-export function PowerChart({ showThresholds = false, timeWindow = '1 hour', series: stored, steps: storedSteps, gaps: storedGaps, emptyText = 'No live data · Connect the sensor or start the demo' }: { showThresholds?: boolean; timeWindow?: string; series?: ChartBatch | PowerSeries; steps?: StepEvent[]; gaps?: GapRecord[]; emptyText?: string }) {
+export function PowerChart({ raw = false, showThresholds = false, timeWindow = '1 hour', series: stored, steps: storedSteps, gaps: storedGaps, emptyText = 'No live data · Connect the sensor or start the demo' }: { raw?: boolean; showThresholds?: boolean; timeWindow?: string; series?: ChartBatch | PowerSeries; steps?: StepEvent[]; gaps?: GapRecord[]; emptyText?: string }) {
   useTheme(); const c = readChartPalette(); // re-renders on theme change
-  const livePower = useDashboard((s) => s.power); const liveTimes = useDashboard((s) => s.times); const liveSteps = useDashboard((s) => s.steps); const liveGaps = useDashboard((s) => s.gaps); const profile = useDashboard((s) => s.profile);
+  const livePower = useDashboard((s) => s.power); const liveTimes = useDashboard((s) => s.times); const liveSteps = useDashboard((s) => s.steps); const liveGaps = useDashboard((s) => s.gaps); const profile = useDashboard((s) => s.profile); const k = scaleFor(useDashboard((s) => s.displayScaled) && !raw);
   const times = stored?.times ?? liveTimes; const power = stored?.powerW ?? livePower;
   const steps = storedSteps ?? liveSteps; const gaps = storedGaps ?? liveGaps;
   const start = stored ? 0 : firstIndexFrom(times, (times.length ? times[times.length - 1] : 0) - (WINDOW_MS[timeWindow] ?? WINDOW_MS['1 hour']));
-  const data = decimateMinMax(times, power, start);
+  const plotted = decimateMinMax(times, power, start);
+  const data = k === 1 ? plotted : plotted.map((p) => [p[0], p[1] * k] as typeof p); // display calibration, plot only
   const fromMs = data.length ? data[0][0] : 0;
   const series: LineSeriesOption[] = [{ type: 'line', data, smooth: .3, smoothMonotone: 'x' /* the curve never overshoots a measured value */, symbol: 'circle', symbolSize: 4, showSymbol: data.length < 30, lineStyle: { color: c.line, width: 2 }, itemStyle: { color: c.dot }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: c.areaTop }, { offset: 1, color: c.areaBottom }] } } }];
   if (showThresholds && data.length) {
-    series[0].markPoint = { symbol: 'circle', symbolSize: 8, label: { show: false }, data: steps.filter((e) => e.t >= fromMs).slice(-200).map((event) => ({ name: 'Step', coord: [event.t, event.peakW], itemStyle: { color: c.step } })) };
+    series[0].markPoint = { symbol: 'circle', symbolSize: 8, label: { show: false }, data: steps.filter((e) => e.t >= fromMs).slice(-200).map((event) => ({ name: 'Step', coord: [event.t, event.peakW * k], itemStyle: { color: c.step } })) };
     series[0].markArea = { silent: true, itemStyle: { color: c.gap }, label: { color: c.gapText, fontSize: 10 }, data: gaps.filter((g) => g.endMs >= fromMs).slice(-50).map((gap) => [{ name: 'Data gap', xAxis: gap.startMs }, { xAxis: gap.endMs }]) };
-    if (profile) series[0].markLine = { symbol: 'none', silent: true, lineStyle: { color: c.threshold, type: 'dashed' }, label: { color: c.thresholdText, fontSize: 10 }, data: [{ yAxis: profile.idleThresholdW, name: 'Idle' }, { yAxis: profile.stepThresholdW, name: 'Step' }] };
+    if (profile) series[0].markLine = { symbol: 'none', silent: true, lineStyle: { color: c.threshold, type: 'dashed' }, label: { color: c.thresholdText, fontSize: 10 }, data: [{ yAxis: profile.idleThresholdW * k, name: 'Idle' }, { yAxis: profile.stepThresholdW * k, name: 'Step' }] };
   }
   const option: EChartsOption = { animation: false, title: data.length ? { show: false } : { show: true, text: emptyText, left: 'center', top: 'middle', textStyle: { color: c.axis, fontSize: 13, fontWeight: 'normal' } }, tooltip: { trigger: 'axis', ...tooltipStyle(c), valueFormatter: (v) => `${Number(v).toFixed(3)} W` }, grid: { left: 52, right: 14, top: 14, bottom: 28 }, xAxis: { type: 'time', axisLine: { lineStyle: { color: c.grid } }, axisTick: { show: false }, axisLabel: { color: c.axis, fontSize: 12, formatter: (v: number) => format(new Date(v), 'HH:mm:ss'), hideOverlap: true }, splitLine: { show: true, lineStyle: { color: c.grid } } }, yAxis: { type: 'value', min: 0, name: 'Power (W)', nameLocation: 'middle', nameGap: 38, nameTextStyle: { color: c.axis, fontSize: 12 }, axisLabel: { color: c.axis, fontSize: 12 }, splitLine: { lineStyle: { color: c.grid } } }, series };
   return <ReactECharts option={option} notMerge lazyUpdate style={{ height: '100%', width: '100%' }} />;

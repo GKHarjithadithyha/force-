@@ -1062,9 +1062,9 @@
     "semantic_hash": ""
   },
   "packages/cloud-agent/src/config.ts": {
-    "mtime": 1794847527.524706,
-    "seen": 1794849133.7622256,
-    "ast_hash": "dc191624d8917b4ce2bce9c0051a5a2e",
+    "mtime": 1794853554.6029596,
+    "seen": 1794853775.417865,
+    "ast_hash": "f664b16354700485fe6d6ca953388cad",
     "semantic_hash": ""
   },
   "packages/cloud-agent/src/docstore.ts": {
@@ -1080,9 +1080,9 @@
     "semantic_hash": ""
   },
   "packages/cloud-agent/src/http.ts": {
-    "mtime": 1794847706.8275259,
-    "seen": 1794849133.7622256,
-    "ast_hash": "b0c171dc912dc10bc30188235665b371",
+    "mtime": 1794853554.7021756,
+    "seen": 1794853775.417865,
+    "ast_hash": "f74835374442e0b22f8c1bbb0a393c53",
     "semantic_hash": ""
   },
   "packages/cloud-agent/src/index.ts": {
@@ -1104,21 +1104,21 @@
     "semantic_hash": ""
   },
   "packages/cloud-agent/src/static.ts": {
-    "mtime": 1794847494.731995,
-    "seen": 1794849133.7622256,
-    "ast_hash": "8071bb06bc5fa544ad8e2a446dfa21f7",
+    "mtime": 1794853554.7837415,
+    "seen": 1794853775.417865,
+    "ast_hash": "57052a5abf4bcd1068d950d7497b0f8c",
     "semantic_hash": ""
   },
   "packages/cloud-agent/src/validate.ts": {
-    "mtime": 1794847840.0190687,
-    "seen": 1794849133.7622256,
-    "ast_hash": "752fcb952e0e27d3885827ffc093e729",
+    "mtime": 1794853554.931152,
+    "seen": 1794853775.417865,
+    "ast_hash": "84f656d33ad14a314dcfb01d6dbe61b7",
     "semantic_hash": ""
   },
   "packages/cloud-agent/src/writer.ts": {
-    "mtime": 1794847677.8520753,
-    "seen": 1794849133.7622256,
-    "ast_hash": "4ad40ea66d1c269403f13993eb366247",
+    "mtime": 1794853554.9746668,
+    "seen": 1794853775.417865,
+    "ast_hash": "643bfb1c7d53cc7452a153f23cacbd6e",
     "semantic_hash": ""
   },
   "packages/cloud-agent/test/emulator.test.ts": {
@@ -1134,9 +1134,9 @@
     "semantic_hash": ""
   },
   "packages/cloud/src/client.ts": {
-    "mtime": 1794847420.9977362,
-    "seen": 1794849133.7622256,
-    "ast_hash": "d586ce993796a79adbadd992962fb4c0",
+    "mtime": 1794853554.1510322,
+    "seen": 1794853775.417865,
+    "ast_hash": "29da0af26cbe5280b7655dd7364cd5e1",
     "semantic_hash": ""
   },
   "packages/cloud/src/days.ts": {
@@ -1158,15 +1158,15 @@
     "semantic_hash": ""
   },
   "packages/cloud/src/model.ts": {
-    "mtime": 1794847280.0844362,
-    "seen": 1794849133.7622256,
-    "ast_hash": "3677913e74a96dcff67134ec198590ae",
+    "mtime": 1794853554.3224165,
+    "seen": 1794853775.417865,
+    "ast_hash": "6c141c344f36e7e24fd8f9d480ff50e1",
     "semantic_hash": ""
   },
   "packages/cloud/test/client.test.ts": {
-    "mtime": 1794847840.0200844,
-    "seen": 1794849133.7622256,
-    "ast_hash": "d15b68e41ecc5e113f0adfa24b439880",
+    "mtime": 1794853554.4339232,
+    "seen": 1794853775.417865,
+    "ast_hash": "08f9a41565c7bbb6055f80c9bb324877",
     "semantic_hash": ""
   },
   "packages/cloud/test/helpers.ts": {
@@ -1176,9 +1176,9 @@
     "semantic_hash": ""
   },
   "packages/cloud/test/model.test.ts": {
-    "mtime": 1794843872.5215702,
-    "seen": 1794844439.783307,
-    "ast_hash": "c069b5c96586fb45e27ac7f8f115c4c7",
+    "mtime": 1794853546.3619156,
+    "seen": 1794853775.417865,
+    "ast_hash": "84cee2666c3820ffccbfe1ad102a582f",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -1188,9 +1188,9 @@
     "semantic_hash": ""
   },
   "FIREBASE_SETUP.md": {
-    "mtime": 1794844407.8643217,
-    "seen": 1794844439.783307,
-    "ast_hash": "05d61647160e1eb19a969bd6dc3d373e",
+    "mtime": 1794853729.8602889,
+    "seen": 1794853775.417865,
+    "ast_hash": "0d8ed129de7b69864a746ab30fabe668",
     "semantic_hash": ""
   },
   "fedfront/lib/sync-token.ts": {
@@ -1206,57 +1206,57 @@
     "semantic_hash": ""
   },
   "packages/cloud-agent/test/e2e.test.ts": {
-    "mtime": 1794847905.4714267,
-    "seen": 1794849133.7622256,
-    "ast_hash": "9f0a14573a3b95d278a4324eada32823",
+    "mtime": 1794853637.3886502,
+    "seen": 1794853775.417865,
+    "ast_hash": "045aa967ce970844bb3eb2eb4d2cc99e",
     "semantic_hash": ""
   },
   "packages/cloud-agent/test/fixtures.ts": {
-    "mtime": 1794847958.9751687,
-    "seen": 1794849133.7622256,
-    "ast_hash": "7aac687499b9279a67a2e1dd3b90945b",
+    "mtime": 1794853555.0532289,
+    "seen": 1794853775.417865,
+    "ast_hash": "8f8ef1d1de932de5ebceef2dc53f58b1",
     "semantic_hash": ""
   },
   "packages/cloud-agent/test/http-security.test.ts": {
-    "mtime": 1794847906.344428,
-    "seen": 1794849133.7622256,
-    "ast_hash": "88ec60f960bd156f21818e5fe62a86aa",
+    "mtime": 1794853555.0858095,
+    "seen": 1794853775.417865,
+    "ast_hash": "68e6fbf3cc07d7de8781ce1a022c2593",
     "semantic_hash": ""
   },
   "packages/cloud-agent/test/ownership.test.ts": {
-    "mtime": 1794847959.788541,
-    "seen": 1794849133.7622256,
-    "ast_hash": "b146d7b24aab47d67f8fe5bb0d76ac54",
+    "mtime": 1794853555.1379158,
+    "seen": 1794853775.417865,
+    "ast_hash": "3f79e3862db986bc7b722e03620b626c",
     "semantic_hash": ""
   },
   "packages/cloud-agent/test/public-fields.test.ts": {
-    "mtime": 1794847960.6518538,
-    "seen": 1794849133.7622256,
-    "ast_hash": "de172bed22fa66b134c187ae1d529532",
+    "mtime": 1794853555.1551661,
+    "seen": 1794853775.417865,
+    "ast_hash": "6db677c1f87b5e1da48edd18493e5293",
     "semantic_hash": ""
   },
   "packages/cloud-agent/test/rules.test.ts": {
-    "mtime": 1794848017.5216427,
-    "seen": 1794849133.7622256,
-    "ast_hash": "741dd515b10f80bd15b3d140c311822e",
+    "mtime": 1794853555.1708972,
+    "seen": 1794853775.417865,
+    "ast_hash": "854afdb03a2c247c4b5fd987fa381c27",
     "semantic_hash": ""
   },
   "packages/cloud-agent/test/static-config.test.ts": {
-    "mtime": 1794847992.0488124,
-    "seen": 1794849133.7622256,
-    "ast_hash": "f0cbbc6f43a8637adea25dea087db2f4",
+    "mtime": 1794853555.190019,
+    "seen": 1794853775.417865,
+    "ast_hash": "1e19f5227f70cece4ef9ed88a9c41147",
     "semantic_hash": ""
   },
   "scripts/agents/claude-account2.ps1": {
-    "mtime": 1794848795.196689,
-    "seen": 1794849133.7622256,
-    "ast_hash": "60d6d41b0b3717bbee5e137b8bd0cd03",
+    "mtime": 1794849135.1256003,
+    "seen": 1794853775.417865,
+    "ast_hash": "1044171c8f2b5ffde334d2a7adc35973",
     "semantic_hash": ""
   },
   ".claude/agents/firebase-backend.md": {
-    "mtime": 1794848299.2999969,
-    "seen": 1794849133.7622256,
-    "ast_hash": "5a2460fc6fd10ecd71f10cd44e910f60",
+    "mtime": 1794853598.1432798,
+    "seen": 1794853775.417865,
+    "ast_hash": "47c31fec6bbb3db44687bac730359a20",
     "semantic_hash": ""
   },
   ".claude/agents/qa-tester.md": {
@@ -1266,15 +1266,387 @@
     "semantic_hash": ""
   },
   ".claude/agents/web-deploy.md": {
-    "mtime": 1794848300.103952,
-    "seen": 1794849133.7622256,
-    "ast_hash": "888a002589c25fe33ccb0f0a3419a3d2",
+    "mtime": 1794853598.9563582,
+    "seen": 1794853775.417865,
+    "ast_hash": "2e746d49b572058ae6587597211c8216",
     "semantic_hash": ""
   },
   "docs/AGENT_PLAN.md": {
-    "mtime": 1794848369.1819248,
-    "seen": 1794849133.7622256,
-    "ast_hash": "9d72d348e4ab5925ae24bb8a444cf3ae",
+    "mtime": 1794849137.577694,
+    "seen": 1794853775.417865,
+    "ast_hash": "0e2b216b2eba8174cc7f91b8b1cead3a",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/.expo/devices.json": {
+    "mtime": 1794839885.663967,
+    "seen": 1794853775.4153268,
+    "ast_hash": "80cf17d1965ead8b379cab2f18d17b9a",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/.expo/settings.json": {
+    "mtime": 1794839885.6766565,
+    "seen": 1794853775.4153268,
+    "ast_hash": "dff84ed8aa10987879e42e418e32194c",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/App.tsx": {
+    "mtime": 1794839885.4338307,
+    "seen": 1794853775.4153268,
+    "ast_hash": "468c97d2187c6d483b353a4da1ca8ba6",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/build.gradle": {
+    "mtime": 1794839888.5491242,
+    "seen": 1794853775.4153268,
+    "ast_hash": "0bcf375f5ea574cf12abd3ada736c672",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/java/com/florix/dashboard/MainActivity.kt": {
+    "mtime": 1794839888.7145424,
+    "seen": 1794853775.4153268,
+    "ast_hash": "c54694305db9b67db257d350cff7bc3f",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/java/com/florix/dashboard/MainApplication.kt": {
+    "mtime": 1794839888.7290037,
+    "seen": 1794853775.4153268,
+    "ast_hash": "91b2b4785df4cbec8ba4a42f0c0d8bf7",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/build.gradle": {
+    "mtime": 1794839888.4921978,
+    "seen": 1794853775.4153268,
+    "ast_hash": "55cec08c744fbe7b1f1294009fe3f65d",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/gradlew": {
+    "mtime": 1794839888.514248,
+    "seen": 1794853775.4153268,
+    "ast_hash": "ff1ddbebbc9b4d04f2e9f8cab50d6595",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/settings.gradle": {
+    "mtime": 1794839888.539117,
+    "seen": 1794853775.4153268,
+    "ast_hash": "1d78d3b4bdc843f58c7d130a370c029c",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/app.json": {
+    "mtime": 1794839885.4209356,
+    "seen": 1794853775.4153268,
+    "ast_hash": "f7ff4e90e9893b906ec2358650f1fb4f",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/babel.config.js": {
+    "mtime": 1794839885.43983,
+    "seen": 1794853775.4153268,
+    "ast_hash": "be17a80a1dc710603bc7e0f4cff2a121",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/backend/config.py": {
+    "mtime": 1794839890.3620641,
+    "seen": 1794853775.4153268,
+    "ast_hash": "8c7acaa89de9bfe9e9346f3f386069f7",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/backend/database.py": {
+    "mtime": 1794839890.3959446,
+    "seen": 1794853775.4153268,
+    "ast_hash": "9bdcd7dae8f79fe52eecfaecac2c5eb9",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/backend/main.py": {
+    "mtime": 1794839890.4108443,
+    "seen": 1794853775.4153268,
+    "ast_hash": "f4519c04eff2a7df925381827399d922",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/backend/schemas.py": {
+    "mtime": 1794839890.4398427,
+    "seen": 1794853775.4153268,
+    "ast_hash": "e05fbf2bd8c556a9fb3615d0548ee909",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/components/BluetoothConnectModal.tsx": {
+    "mtime": 1794839890.5181115,
+    "seen": 1794853775.4153268,
+    "ast_hash": "8081a4f85fc9c0241fafa4fab3c3935b",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/components/Dashboard.tsx": {
+    "mtime": 1794839890.5251114,
+    "seen": 1794853775.4153268,
+    "ast_hash": "609632e309db2b4cd3d36c50fdbdec79",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/components/EnergyJourney.tsx": {
+    "mtime": 1794839890.533104,
+    "seen": 1794853775.4153268,
+    "ast_hash": "cff985c1d299cdcd80392b544ab50a95",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/components/Header.tsx": {
+    "mtime": 1794839890.5400503,
+    "seen": 1794853775.4153268,
+    "ast_hash": "1a0c86fabdabda79feb704ecdcd72bcd",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/components/MetricCard.tsx": {
+    "mtime": 1794839890.5450068,
+    "seen": 1794853775.4153268,
+    "ast_hash": "f013175b354d17d60ee05c3b2e9a6f4c",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/components/PowerUsage.tsx": {
+    "mtime": 1794839890.550031,
+    "seen": 1794853775.4153268,
+    "ast_hash": "02e9783c018f7635da8afd218b30f597",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/components/PressureHeatmap.tsx": {
+    "mtime": 1794839890.557571,
+    "seen": 1794853775.4153268,
+    "ast_hash": "182356339b4e8316c55e988ce0dbd6e9",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/components/PressureSensor.tsx": {
+    "mtime": 1794839890.566147,
+    "seen": 1794853775.4153268,
+    "ast_hash": "63dec6c5dba34d76695b1d3289def764",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/components/RealtimeGraph.tsx": {
+    "mtime": 1794839890.5731921,
+    "seen": 1794853775.4153268,
+    "ast_hash": "431ddeb63496f91ab118c0e4a5e30e4a",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/components/SmartEnergyDashboard.tsx": {
+    "mtime": 1794839890.5809388,
+    "seen": 1794853775.4153268,
+    "ast_hash": "71f185b28b5e3f12de75dd3ec4149283",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/config.ts": {
+    "mtime": 1794839885.4711936,
+    "seen": 1794853775.4153268,
+    "ast_hash": "01af240b51a374fc3dcc483c44fc6f2a",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/constants.ts": {
+    "mtime": 1794839885.4850166,
+    "seen": 1794853775.4153268,
+    "ast_hash": "c31f4d2f1d29a990a8a12720d8d0ceb3",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/context/SensorContext.tsx": {
+    "mtime": 1794839890.5863757,
+    "seen": 1794853775.4153268,
+    "ast_hash": "20e1181656b751201b64b603f7d92583",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/context/ThemeContext.tsx": {
+    "mtime": 1794839890.597735,
+    "seen": 1794853775.4153268,
+    "ast_hash": "c74b828c1d06e005f359ca6aa3d982a8",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/destop/main.js": {
+    "mtime": 1794839890.6134226,
+    "seen": 1794853775.4153268,
+    "ast_hash": "0328c4ec00db2274fc0c6865fb717225",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/destop/package.json": {
+    "mtime": 1794839890.6323378,
+    "seen": 1794853775.4153268,
+    "ast_hash": "b1f10212b1f1eb1675a5d00ea937fc07",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/eas.json": {
+    "mtime": 1794839885.4890342,
+    "seen": 1794853775.4153268,
+    "ast_hash": "778f0c7bc8d481457be8d64dcbc074bc",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/hooks/useBLE.ts": {
+    "mtime": 1794839992.4502137,
+    "seen": 1794853775.4153268,
+    "ast_hash": "ee5c9d0c51069a2a10d63b1021ce6966",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/metadata.json": {
+    "mtime": 1794839885.5652795,
+    "seen": 1794853775.4153268,
+    "ast_hash": "a43adef14d5c895c753852106d763c14",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/metro.config.js": {
+    "mtime": 1794839885.5776901,
+    "seen": 1794853775.4153268,
+    "ast_hash": "c90a2e49a9ca42c9d6d27122d0e97d08",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/nativewind-env.d.ts": {
+    "mtime": 1794839885.580995,
+    "seen": 1794853775.4153268,
+    "ast_hash": "e3064341eeb31cf4df5b5219396ac00d",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/package.json": {
+    "mtime": 1794839885.6076162,
+    "seen": 1794853775.4153268,
+    "ast_hash": "a2fd0362b493cc87efc97c55f85763db",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/tailwind.config.js": {
+    "mtime": 1794839885.6129506,
+    "seen": 1794853775.4153268,
+    "ast_hash": "23ea702f3122b256a36eff7b9e53cbb4",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/tsconfig.json": {
+    "mtime": 1794839885.6287043,
+    "seen": 1794853775.4153268,
+    "ast_hash": "d57ac32bb6a082d97f4687b962780d69",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/types.ts": {
+    "mtime": 1794839885.6315792,
+    "seen": 1794853775.4153268,
+    "ast_hash": "2c67ea9aed13e8ce9df4bedb538bfc1d",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/vite.config.ts": {
+    "mtime": 1794839885.6518486,
+    "seen": 1794853775.4153268,
+    "ast_hash": "b02247fc15de1a3ff3a9cb4c1bbe3fa1",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/.expo/README.md": {
+    "mtime": 1794839885.670489,
+    "seen": 1794853775.417865,
+    "ast_hash": "2d3a37a405a8f9ffb72ff12bdd3b0adf",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/README.md": {
+    "mtime": 1794839885.6129506,
+    "seen": 1794853775.417865,
+    "ast_hash": "50a51085b56ce796edfb4b4b37cf153c",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/backend/requirements.txt": {
+    "mtime": 1794839890.4238338,
+    "seen": 1794853775.417865,
+    "ast_hash": "1c6248cac136d390f3dbc56ba5144f8e",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/index.html": {
+    "mtime": 1794839885.558646,
+    "seen": 1794853775.417865,
+    "ast_hash": "d1d063dcce8af2804efeef753d4da4d2",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/drawable-hdpi/splashscreen_logo.png": {
+    "mtime": 1794839888.807471,
+    "seen": 1794853775.417865,
+    "ast_hash": "ade4f271d920c553479f8359126fe71c",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/drawable-mdpi/splashscreen_logo.png": {
+    "mtime": 1794839888.8330946,
+    "seen": 1794853775.417865,
+    "ast_hash": "456a586f33d48e02adee03680b872073",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/drawable-xhdpi/splashscreen_logo.png": {
+    "mtime": 1794839888.85501,
+    "seen": 1794853775.417865,
+    "ast_hash": "b151f30998a8eb180038294d96108ad3",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/drawable-xxhdpi/splashscreen_logo.png": {
+    "mtime": 1794839888.8886218,
+    "seen": 1794853775.417865,
+    "ast_hash": "456fa27f2c9de9a9bf0d8951a9609ea4",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/drawable-xxxhdpi/splashscreen_logo.png": {
+    "mtime": 1794839888.914417,
+    "seen": 1794853775.417865,
+    "ast_hash": "8724a45c38b0f973ac9713ff270a40cb",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/mipmap-hdpi/ic_launcher.webp": {
+    "mtime": 1794839888.9367113,
+    "seen": 1794853775.417865,
+    "ast_hash": "39370f3d8346edf24af4d811c7d6f70e",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp": {
+    "mtime": 1794839888.9521413,
+    "seen": 1794853775.417865,
+    "ast_hash": "20ccd3ed0e1f2ad24bb23bbe446bb3c4",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/mipmap-mdpi/ic_launcher.webp": {
+    "mtime": 1794839888.9733832,
+    "seen": 1794853775.417865,
+    "ast_hash": "3f9aaf70b3e144d576b065f053d99962",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp": {
+    "mtime": 1794839888.9805522,
+    "seen": 1794853775.417865,
+    "ast_hash": "5a4b3e0b53eae065fff672aa4826aa85",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/mipmap-xhdpi/ic_launcher.webp": {
+    "mtime": 1794839889.002637,
+    "seen": 1794853775.417865,
+    "ast_hash": "f5b91ea2d6be8be772010065f9dc1c8f",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp": {
+    "mtime": 1794839889.0115333,
+    "seen": 1794853775.417865,
+    "ast_hash": "4cfea330328c6d01709e4ebc2424858a",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp": {
+    "mtime": 1794839889.0329912,
+    "seen": 1794853775.417865,
+    "ast_hash": "7c297b3cf4de675ebeb2b65e031188be",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp": {
+    "mtime": 1794839889.0408409,
+    "seen": 1794853775.417865,
+    "ast_hash": "3b83d51d2253266ab4b1ace9af265e6e",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp": {
+    "mtime": 1794839889.0617924,
+    "seen": 1794853775.417865,
+    "ast_hash": "529bfacc3678dee05f8b0eb0ca0a0f96",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp": {
+    "mtime": 1794839889.0702395,
+    "seen": 1794853775.417865,
+    "ast_hash": "250b231d6a4989ba507ae9b02db6b0dd",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/destop/package-lock.json": {
+    "mtime": 1794839890.6134226,
+    "seen": 1794853775.417865,
+    "ast_hash": "17830f18c41cac9b6cccc031f44267bd",
+    "semantic_hash": ""
+  },
+  "anriod  app/Florix APP/Florix APP/package-lock.json": {
+    "mtime": 1794839885.5971255,
+    "seen": 1794853775.417865,
+    "ast_hash": "528f096efc11da20871faa92becf4d0d",
     "semantic_hash": ""
   },
   "package-lock.json": {

@@ -14,7 +14,8 @@ import { getHistory, getTodayVsYesterday } from '@/lib/analytics';
 import type { DayTotals } from '@/lib/analytics';
 import { formatCo2, formatEnergy, formatPower, formatQuality, formatRecorded } from '@/lib/format';
 import { hasData, readingsUsable, sourceBanner } from '@/lib/live';
-import { loadBrandExpansion } from '@/lib/preferences';
+import { loadBrandExpansion, loadDisplayScaled } from '@/lib/preferences';
+import { scaleFor } from '@/lib/display-scale';
 import { useShallow } from 'zustand/react/shallow';
 import { useDashboard } from '@/stores/dashboard';
 import type { HistoryPoint, Range } from '@/contracts';
@@ -31,6 +32,7 @@ const POWER_WINDOWS = [{ value: '30 seconds', label: '30 s' }, { value: '5 minut
 export function Dashboard() {
   // explicit selection: the live chart buffers are NOT selected, so chart data never re-renders the shell
   const { snapshot, engine, app, profile, setApp, setSnapshot, setProfile, pushChart, pushStep, pushGap, clearLive, page, setPage, range, setRange, brandExpansion, setBrandExpansion } = useDashboard(useShallow((s) => ({ snapshot: s.snapshot, engine: s.engine, app: s.app, profile: s.profile, setApp: s.setApp, setSnapshot: s.setSnapshot, setProfile: s.setProfile, pushChart: s.pushChart, pushStep: s.pushStep, pushGap: s.pushGap, clearLive: s.clearLive, page: s.page, setPage: s.setPage, range: s.range, setRange: s.setRange, brandExpansion: s.brandExpansion, setBrandExpansion: s.setBrandExpansion })));
+  const k = scaleFor(useDashboard((s) => s.displayScaled)); const sc = (v: number | null | undefined) => (v == null ? v : v * k);
   const [now, setNow] = useState(new Date()); const [kiosk, setKiosk] = useState(false); const [navOpen, setNavOpen] = useState(false);
   const [powerWindow, setPowerWindow] = useState('5 minutes');
   const [history, setHistory] = useState<HistoryPoint[]>([]);
@@ -40,7 +42,7 @@ export function Dashboard() {
   const lastSession = useRef<string | null>(null);
   useEffect(() => { const interval = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(interval); }, []);
   useEffect(() => {
-    const created = createAppEngine(); setApp(created); setBrandExpansion(loadBrandExpansion());
+    const created = createAppEngine(); setApp(created); setBrandExpansion(loadBrandExpansion()); useDashboard.getState().setDisplayScaled(loadDisplayScaled());
     const e = created.engine;
     const unsubSnapshot = e.subscribeSnapshot((s) => {
       // a new session starts a new live chart; the previous one stays in storage
@@ -71,7 +73,8 @@ export function Dashboard() {
   const energyWh = simulated ? metrics?.sessionEnergyWh : days?.today.energyWh;
   const stepsValue = simulated ? metrics?.steps : days?.today.steps;
   const co2Kg = simulated ? metrics?.co2AvoidedKg : days?.co2TodayKg;
-  const energy = formatEnergy(energyWh); const power = formatPower(usable ? metrics?.powerW : null); const co2 = formatCo2(co2Kg);
+  const energy = formatEnergy(sc(energyWh)); const power = formatPower(usable ? sc(metrics?.powerW) : null); const co2 = formatCo2(sc(co2Kg));
+  const shownHistory = useMemo(() => (k === 1 ? history : history.map((p) => ({ ...p, energyWh: p.energyWh * k }))), [history, k]);
   const quality = live ? formatQuality(snapshot.quality.recordedMs, snapshot.quality.excludedGapMs) : days ? `${formatRecorded(days.today.recordedMs)} (stored)` : 'Recorded — · Gaps —';
   const showYesterday = !simulated && days !== null;
   const stale = connection === 'stale';
@@ -88,6 +91,7 @@ export function Dashboard() {
     <main className="main-area">
       <DashboardHeader title={title} subtitle={subtitle} now={now} connection={connection} menuOpen={navOpen} onOpenMenu={() => setNavOpen(true)} onToggleKiosk={() => setKiosk(!kiosk)}/>
       <div className="banners">
+        {k !== 1 && <ConnectionBanner tone="info">Scaled ×1.8 — Display Only · Voltage, power, energy and CO₂ on Overview and Live are scaled estimates, not measurements. Current, Sessions, Connection, Calibration and exports show raw values.</ConnectionBanner>}
         {app?.mode === 'mock' && <ConnectionBanner>Mock engine · Simulated hardware (NEXT_PUBLIC_ENGINE=mock). Stored separately from real device data.</ConnectionBanner>}
         {banner && app?.mode !== 'mock' && <ConnectionBanner>{banner}</ConnectionBanner>}
         {!live && app?.mode === 'device' && <ConnectionBanner>Not connected · Open Connection to pair the FORCE sensor over Bluetooth, or start the demo.</ConnectionBanner>}
@@ -104,16 +108,16 @@ export function Dashboard() {
           <section className="panel card kpi-panel" aria-label="Key metrics">
             <div className="card-head"><h2 className="panel-title">Key Metrics <span className="subdued">({periodLabel})</span></h2><Info size={18} color="var(--text-muted)" role="img" aria-label={simulated ? 'Values for the running simulated session only.' : 'Stored real-device totals since local midnight.'}/></div>
             <div className="kpi-grid">
-              <MetricCard icon={Zap} label="Total Energy Generated" value={`${energy.value} ${energy.unit}`.trim()} comparison={showYesterday ? `Yesterday ${formatEnergy(days.yesterday.energyWh).value} ${formatEnergy(days.yesterday.energyWh).unit}`.trim() : undefined} badge={simulated ? { text: 'Simulated', tone: 'info' } : { text: 'Measured', tone: 'good' }} note={quality}/>
+              <MetricCard icon={Zap} label="Total Energy Generated" value={`${energy.value} ${energy.unit}`.trim()} comparison={showYesterday ? `Yesterday ${formatEnergy(sc(days.yesterday.energyWh)).value} ${formatEnergy(sc(days.yesterday.energyWh)).unit}`.trim() : undefined} badge={simulated ? { text: 'Simulated', tone: 'info' } : k !== 1 ? { text: 'Scaled ×1.8', tone: 'warn' } : { text: 'Measured', tone: 'good' }} note={quality}/>
               <MetricCard icon={Footprints} label="Total Footsteps" value={stepsValue?.toLocaleString() ?? '—'} comparison={showYesterday ? `Yesterday ${days.yesterday.steps.toLocaleString()} steps` : undefined} badge={simulated ? { text: 'Simulated', tone: 'info' } : { text: 'Detected', tone: 'good' }} note={quality}/>
-              <MetricCard icon={Leaf} label="CO₂ Offset (Estimated)" value={`${co2.value} ${co2.unit}`.trim()} comparison={showYesterday ? `Yesterday ${formatCo2(days.co2YesterdayKg).value} ${formatCo2(days.co2YesterdayKg).unit}`.trim() : undefined} badge={{ text: 'Estimate', tone: 'warn' }} note="Placeholder emission factor"/>
+              <MetricCard icon={Leaf} label="CO₂ Offset (Estimated)" value={`${co2.value} ${co2.unit}`.trim()} comparison={showYesterday ? `Yesterday ${formatCo2(sc(days.co2YesterdayKg)).value} ${formatCo2(sc(days.co2YesterdayKg)).unit}`.trim() : undefined} badge={{ text: 'Estimate', tone: 'warn' }} note="Placeholder emission factor"/>
               <MetricCard icon={Sprout} label="Sustainability Score" value={!live || metrics?.sustainabilityScore == null ? '—' : `${metrics.sustainabilityScore}`} badge={{ text: 'Placeholder', tone: 'warn' }} note="Formula not agreed" green/>
             </div>
           </section>
         </div>
         <div className="ov-bottom">
           <RealTimePowerCard snapshot={snapshot} connection={connection} power={power} steps={stepsText} stepsLabel={simulated ? 'Steps (session)' : 'Steps today'} usable={usable} glowing={glowing}/>
-          <ChartCard title="Energy Generated" range={range} tabs={tabs} onRange={setRange}><EnergyChart history={history} range={range}/></ChartCard>
+          <ChartCard title="Energy Generated" range={range} tabs={tabs} onRange={setRange}><EnergyChart history={shownHistory} range={range}/></ChartCard>
           <ChartCard title="Foot Traffic" range={range} tabs={tabs} onRange={setRange}><TrafficChart history={history} range={range}/></ChartCard>
           <DeviceHealth snapshot={snapshot} connection={connection}/>
         </div>

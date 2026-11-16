@@ -19,6 +19,9 @@ interface DashboardState {
   page: string;
   range: string;
   brandExpansion: string;
+  /** Display-only voltage calibration (x1.8). Never touches engine data. */
+  displayScaled: boolean;
+  setDisplayScaled: (on: boolean) => void;
   setApp: (app: AppEngine | null) => void;
   setSnapshot: (snapshot: LiveSnapshot) => void;
   setProfile: (profile: DeviceProfile) => void;
@@ -46,7 +49,7 @@ export const useDashboard = create<DashboardState>((set, get) => {
     set(over > 0 ? { power: power.slice(over), times: times.slice(over) } : { power, times });
   };
   return {
-  app: null, engine: null, snapshot: null, profile: null, power: [], times: [], steps: [], gaps: [], page: 'Overview', range: 'Today', brandExpansion: BRAND_EXPANSION,
+  app: null, engine: null, snapshot: null, profile: null, power: [], times: [], steps: [], gaps: [], page: 'Overview', range: 'Today', brandExpansion: BRAND_EXPANSION, displayScaled: false,
   setApp: (app) => set({ app, engine: app?.engine ?? null }),
   setSnapshot: (snapshot) => set({ snapshot }),
   setProfile: (profile) => set({ profile }),
@@ -61,6 +64,7 @@ export const useDashboard = create<DashboardState>((set, get) => {
   setPage: (page) => set({ page }),
   setRange: (range) => set({ range }),
   setBrandExpansion: (brandExpansion) => set({ brandExpansion }),
+  setDisplayScaled: (displayScaled) => set({ displayScaled }),
   };
 });
 

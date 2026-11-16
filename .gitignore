@@ -27,3 +27,33 @@ ui-debug.log
 
 # Original Android app source (own git repo, holds .env.local secrets and large archives): never commit here
 /anriod  app/
+
+# Secrets and credentials (examples such as .env.cloud.example stay tracked)
+.env.*
+!.env.example
+!.env.cloud.example
+*.env
+*adminsdk*.json
+*firebase-adminsdk*
+*.pem
+*.p12
+*.keystore
+*.jks
+*.token
+.sync-token
+service-account*
+google-services.json
+GoogleService-Info.plist
+
+# Local databases, logs, build output, toolchains, deploy state
+*.sqlite
+*.sqlite3
+*.db
+*.log
+npm-debug.log*
+out/
+.next/
+.vercel/
+.expo/
+.toolchain/
+.turbo/
