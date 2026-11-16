@@ -22,4 +22,4 @@ Set-Location $WorkDir
 $host.UI.RawUI.WindowTitle = 'Claude account 2 - web-deploy'
 Write-Host "Claude account 2 | config: $env:CLAUDE_CONFIG_DIR | folder: $WorkDir"
 Write-Host 'Role: web-deploy. First read D:\FED\docs\AGENT_PLAN.md and D:\FED\.agent-board\TASKS.md.'
-claude --add-dir D:\FED\.agent-board
+claude --model sonnet --effort medium --add-dir D:\FED\.agent-board

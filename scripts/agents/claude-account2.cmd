@@ -5,8 +5,9 @@ rem (default %USERPROFILE%\.claude). No credentials are copied between accounts.
 rem First start: Claude Code asks you to log in. Use the SECOND account (private browser
 rem window if the browser is signed in to the first one).
 set "CLAUDE_CONFIG_DIR=%USERPROFILE%\.claude-account2"
-if exist "D:\FED\.worktrees\web" (cd /d "D:\FED\.worktrees\web") else (cd /d "D:\FED")
+rem Optional first argument: the folder to start in (for example D:\FED\.worktrees\multi)
+if not "%~1"=="" (cd /d "%~1") else if exist "D:\FED\.worktrees\web" (cd /d "D:\FED\.worktrees\web") else (cd /d "D:\FED")
 title Claude account 2 - web-deploy
 echo Claude account 2 ^| config: %CLAUDE_CONFIG_DIR% ^| folder: %CD%
 echo First prompt: Act as web-deploy (.claude\agents\web-deploy.md). Do task T0 in D:\FED\.agent-board\TASKS.md.
-claude --add-dir D:\FED\.agent-board
+claude --model sonnet --effort medium --add-dir D:\FED\.agent-board
