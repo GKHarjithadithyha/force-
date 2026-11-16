@@ -1,0 +1,72 @@
+rules_version = '2';
+
+// F.O.R.C.E Firestore rules (FIREBASE_SETUP.md, section 5).
+//
+// Writes: NO client may write anything. The only writer is the local sync agent, which uses the
+// Firebase Admin SDK (Admin access bypasses these rules) with a key kept on the laptop.
+//
+// Reads:
+// - Public (website, Android app, anyone): devices, liveStatus, dailySummaries. These documents
+//   hold only approved fields (no settings profile, no installation site, no free text).
+//   Listing is limited to pages of at most 100 documents, so one request cannot read everything.
+// - Private (sessions, footsteps, energyMinutes, dataGaps, deviceConfigs): signed-in users that an
+//   administrator granted the custom claim forceReader == true
+//   (npm run cloud:grant-reader -- <email>). Creating an account alone gives no access.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isReader() {
+      return request.auth != null && request.auth.token.forceReader == true;
+    }
+
+    function smallPage() {
+      return request.query.limit != null && request.query.limit <= 100;
+    }
+
+    match /devices/{deviceId} {
+      allow get: if true;
+      allow list: if smallPage();
+      allow write: if false;
+    }
+    match /liveStatus/{deviceId} {
+      allow get: if true;
+      allow list: if smallPage();
+      allow write: if false;
+    }
+    match /dailySummaries/{summaryId} {
+      allow get: if true;
+      allow list: if smallPage();
+      allow write: if false;
+    }
+
+    match /sessions/{sessionId} {
+      allow get: if isReader();
+      allow list: if isReader() && request.query.limit != null && request.query.limit <= 500;
+      allow write: if false;
+    }
+    match /footsteps/{stepId} {
+      allow get: if isReader();
+      allow list: if isReader() && request.query.limit != null && request.query.limit <= 500;
+      allow write: if false;
+    }
+    match /energyMinutes/{minuteId} {
+      allow get: if isReader();
+      allow list: if isReader() && request.query.limit != null && request.query.limit <= 500;
+      allow write: if false;
+    }
+    match /dataGaps/{gapId} {
+      allow get: if isReader();
+      allow list: if isReader() && request.query.limit != null && request.query.limit <= 500;
+      allow write: if false;
+    }
+    match /deviceConfigs/{deviceId} {
+      allow get, list: if isReader();
+      allow write: if false;
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

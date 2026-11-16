@@ -406,8 +406,24 @@ export class Store {
 
   /** Real-device totals over [fromMs, toMs): steps, energy and recorded time (DCR "today"). */
   async getTotals(fromMs: number, toMs: number): Promise<RangeTotals> {
+    return (await this.getTotalsExact(fromMs, toMs)).totals;
+  }
+
+  /**
+   * Additive (cloud sync): the same aggregation as `getTotals`, optionally limited to one device,
+   * plus the exact energy as a BigInt of doubled nanojoules (the sum of the minute buckets'
+   * `energyNj2`). `getTotals` is this with no device filter, so both always agree.
+   */
+  async getTotalsExact(
+    fromMs: number,
+    toMs: number,
+    deviceId?: string,
+  ): Promise<{ totals: RangeTotals; energyNj2: bigint }> {
     const sessions = (await this.db.sessions.where('source').equals('device').toArray()).filter(
-      (s) => s.startedAt < toMs && (s.endedAt ?? Number.POSITIVE_INFINITY) >= fromMs,
+      (s) =>
+        s.startedAt < toMs &&
+        (s.endedAt ?? Number.POSITIVE_INFINITY) >= fromMs &&
+        (deviceId === undefined || s.deviceId === deviceId),
     );
     const ids = new Set(sessions.map((s) => s.id));
     const fromMin = Math.floor(fromMs / 60_000);
@@ -416,10 +432,12 @@ export class Store {
       await this.db.minutes.where('minute').between(fromMin, toMin, true, false).toArray()
     ).filter((m) => ids.has(m.sessionId));
     let nj2 = 0;
+    let exact = 0n;
     let recorded = 0;
     let peakUw = 0;
     for (const m of mins) {
       nj2 += m.energyNj2;
+      exact += BigInt(m.energyNj2);
       recorded += m.recordedMs;
       if (m.peakPowerUw > peakUw) peakUw = m.peakPowerUw;
     }
@@ -427,14 +445,22 @@ export class Store {
       await this.db.steps.where('t').between(fromMs, toMs, true, false).toArray()
     ).filter((s) => ids.has(s.sessionId));
     return {
-      fromMs,
-      toMs,
-      steps: steps.length,
-      energyWh: nj2 / 2e9 / 3600,
-      recordedMs: recorded,
-      peakPowerW: peakUw / 1e6,
-      sessions: sessions.length,
+      totals: {
+        fromMs,
+        toMs,
+        steps: steps.length,
+        energyWh: nj2 / 2e9 / 3600,
+        recordedMs: recorded,
+        peakPowerW: peakUw / 1e6,
+        sessions: sessions.length,
+      },
+      energyNj2: exact,
     };
+  }
+
+  /** Additive (cloud sync): the minute buckets of one session, oldest first. */
+  async getSessionMinutes(id: string): Promise<MinuteRow[]> {
+    return this.db.minutes.where('sessionId').equals(id).sortBy('minute');
   }
 
   // ===========================================================================================

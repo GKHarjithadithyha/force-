@@ -8,6 +8,7 @@ import { formatEnergy, formatPower, formatQuality } from '@/lib/format';
 import { startOfLocalDay } from '@/lib/analytics';
 import { hasData, inputStatus, readingsUsable, sensorStatus, tileState } from '@/lib/live';
 import { PowerChart } from '@/components/charts';
+import { CloudSyncStatus } from '@/components/cloud-sync-status';
 import { Button } from '@/components/ui/button';
 import { BRAND_EXPANSION } from '@/lib/brand';
 import { saveBrandExpansion } from '@/lib/preferences';
@@ -58,6 +59,7 @@ function ConnectionScreen({ engine, connection, snapshot }: { engine: DashboardE
       {!supported && <p className="inline-warning"><CircleAlert size={17}/> Web Bluetooth is not available in this browser. Use Chrome or Edge for device connection. Start Demo is available.</p>}<NoteLine note={note}/>
     </section>
     <section className="panel utility-screen"><div className="utility-heading"><h2>Device Information</h2><Wifi size={20}/></div><InfoLine label="Device name" value={info?.name ?? dash}/><InfoLine label="Device ID" value={info?.deviceId ?? dash}/><InfoLine label="Firmware" value={info?.firmwareVersion ?? dash}/><InfoLine label="Sample rate (device)" value={info ? `${info.sampleRateHz} Hz` : dash}/><InfoLine label="Sample rate (measured)" value={hasData(snapshot) && m ? `${m.sampleRateHz.toFixed(1)} Hz` : dash}/><InfoLine label="Sensor current limit" value={info ? `${info.sensorLimitMa} mA` : dash}/><InfoLine label="Signal strength" value={m?.rssiDbm == null ? dash : `${m.rssiDbm} dBm`}/><InfoLine label="Last packet" value={age}/><InfoLine label="Sensor status" value={sensorStatus(snapshot).value}/><InfoLine label="Power input" value={inputStatus(snapshot).value}/><InfoLine label="Raw reading (diagnostic)" value={hasData(snapshot) && m ? `${m.voltageV.toFixed(3)} V · ${m.currentMa.toFixed(1)} mA${m.measurementValid ? '' : ' (last valid)'}` : dash}/><InfoLine label="Packets lost / dropped" value={q ? `${q.lostPackets} / ${q.droppedPackets}` : dash}/><InfoLine label="Malformed / duplicate / late" value={q ? `${q.detail.malformedPackets} / ${q.detail.duplicatePackets} / ${q.detail.latePackets}` : dash}/><InfoLine label="Clipped samples" value={q ? String(q.detail.clippedSamples) : dash}/><InfoLine label="Data quality" value={q ? formatQuality(q.recordedMs, q.excludedGapMs) : dash}/></section>
+    <CloudSyncStatus/>
   </div>;
 }
 

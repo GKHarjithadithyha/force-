@@ -360,6 +360,26 @@ describe('totals and the daily report (DCR)', () => {
     expect(none.energyWh).toBe(0);
   });
 
+  it('getTotalsExact matches getTotals, filters by device and keeps the exact energy', async () => {
+    const store = mkStore();
+    await runLive(store, { cadenceSpm: 90 }, 30_000);
+    const all = await store.getTotals(ANCHOR - 1000, ANCHOR + 86_400_000);
+    const exact = await store.getTotalsExact(ANCHOR - 1000, ANCHOR + 86_400_000);
+    expect(exact.totals).toEqual(all);
+    const mine = await store.getTotalsExact(ANCHOR - 1000, ANCHOR + 86_400_000, 'FORCE-STORE');
+    expect(mine.totals).toEqual(all);
+    const other = await store.getTotalsExact(ANCHOR - 1000, ANCHOR + 86_400_000, 'FORCE-0000');
+    expect(other.totals.sessions).toBe(0);
+    expect(other.energyNj2).toBe(0n);
+    const [s] = await store.listSessions();
+    const minutes = await store.getSessionMinutes(s!.id);
+    expect(minutes.map((m) => m.minute)).toEqual(
+      [...minutes.map((m) => m.minute)].sort((a, b) => a - b),
+    );
+    expect(exact.energyNj2).toBe(minutes.reduce((a, m) => a + BigInt(m.energyNj2), 0n));
+    expect(Number(exact.energyNj2) / 2e9 / 3600).toBeCloseTo(all.energyWh, 15);
+  });
+
   it('exportStepsCsv has the DCR columns, one row per step in range, all sessions', async () => {
     const store = mkStore();
     const live = await runLive(store, { cadenceSpm: 60 }, 20_000);

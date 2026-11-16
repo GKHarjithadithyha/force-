@@ -26,6 +26,7 @@ const FORCE_PACKAGES = [
   '@force/device',
   '@force/storage',
   '@force/worker',
+  '@force/cloud',
 ];
 
 /** @type {import('next').NextConfig} */

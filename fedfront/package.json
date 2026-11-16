@@ -17,6 +17,7 @@
     "test:static": "playwright test --config playwright.static.config.ts"
   },
   "dependencies": {
+    "@force/cloud": "*",
     "@force/contracts": "*",
     "@force/engine": "*",
     "@force/worker": "*",

@@ -7,3 +7,20 @@ coverage/
 .env
 .DS_Store
 graphify-out/cache/
+
+# Firebase / cloud sync: never commit credentials or local settings
+.env.cloud
+.env.*.local
+secrets/
+*service-account*.json
+*serviceAccount*.json
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Claude Code personal settings and agent worktrees
+.claude/settings.local.json
+.claude/worktrees/
+.worktrees/
+.agent-board/

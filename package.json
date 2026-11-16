@@ -29,7 +29,12 @@
     "web:e2e:static": "npm run test:static -w fedfront",
     "check:web": "npm run web:typecheck && npm run web:lint && npm run web:test && npm run web:build",
     "check:all": "npm run check:generated && npm run check && npm run check:web",
-    "web:hardware-check": "node fedfront/scripts/hardware-browser-check.mjs"
+    "web:hardware-check": "node fedfront/scripts/hardware-browser-check.mjs",
+    "cloud:agent": "tsx packages/cloud-agent/src/main.ts",
+    "cloud:check": "tsx packages/cloud-agent/src/main.ts --check",
+    "cloud:grant-reader": "tsx packages/cloud-agent/src/grant-reader.ts",
+    "cloud:token": "tsx packages/cloud-agent/src/token.ts",
+    "cloud:test:rules": "firebase emulators:exec --only firestore --project demo-force \"vitest run packages/cloud-agent/test/rules.test.ts packages/cloud-agent/test/emulator.test.ts\""
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

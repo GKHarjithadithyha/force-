@@ -8,6 +8,7 @@ The dashboard (`fedfront/`) has one switch: which engine it runs. Everything els
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_ENGINE` | unset, `device`, `mock` | unset (= `device`) | `device`: the real engine (Web Bluetooth, Web Worker, IndexedDB `force`). `mock`: the same engine pipeline fed by the packet simulator, on IndexedDB `force-mock`, with a "Mock engine" banner and a fault-injection panel. Any other value stops `next dev` and `next build` with an error. |
 | `FORCE_ALLOW_MOCK_BUILD` | `1` | unset | `next build` refuses `NEXT_PUBLIC_ENGINE=mock` unless this is `1`. Only for a deliberately labelled demo build. |
+| `NEXT_PUBLIC_CLOUD_SYNC_URL` | unset, `/api/sync/v1`, or `http://127.0.0.1:8787/api/sync/v1` | unset (cloud sync off) | Firestore cloud sync through the local sync agent. Not a secret. Ignored in mock mode. The agent's own settings live in `.env.cloud` at the repository root; see FIREBASE_SETUP.md. |
 | `E2E_PORT` | port | `3100` | Port of the dev server the mock-mode Playwright suite starts. |
 | `STATIC_PORT` | port | `3200` | Port of the static server the production-export Playwright suite starts. |
 | `CI` | any | unset | Playwright never reuses an already running server. |
