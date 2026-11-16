@@ -13,6 +13,8 @@ The dashboard (`fedfront/`) has one switch: which engine it runs. Everything els
 | `STATIC_PORT` | port | `3200` | Port of the static server the production-export Playwright suite starts. |
 | `CI` | any | unset | Playwright never reuses an already running server. |
 
+For a public deployment leave `NEXT_PUBLIC_CLOUD_SYNC_URL` unset; `npm run hosting:config -w fedfront` reads it to set the CSP `connect-src` and warns when it is set. See RELEASE_READINESS.md, "Public hosting".
+
 Set them in the shell, or in `fedfront/.env.local` (git-ignored). `fedfront/.env.example` documents them.
 
 ## Data isolation

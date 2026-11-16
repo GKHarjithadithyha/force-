@@ -45,6 +45,18 @@ Status as of 2026-11-16. Software only: no hardware was used for any result here
 - Step and idle thresholds: placeholders until calibrated on the real tile.
 - Multi-tile floor map: not supported (no multi-tile API, one sensor). The Overview shows the single tile; nothing simulates more tiles.
 
+## Public hosting (prepared, not deployed)
+
+The dashboard is a static export (`fedfront/out`), so any HTTPS static host works; Web Bluetooth needs HTTPS. Firebase Hosting is prepared:
+
+1. Build with cloud sync off (the sync agent runs only on the bench computer): `npm run web:build`
+2. Generate the hosting config from the build: `npm run hosting:config -w fedfront` writes `fedfront/firebase.json` (git-ignored): security headers, a hash-only CSP computed from the built pages, immutable caching for `/_next/static/**`, no-cache for pages, `sw.js` and the manifest.
+3. Preview without publishing: `cd fedfront` then `firebase hosting:channel:deploy preview --project <project-id> --expires 7d`
+4. Production, only after approval: `cd fedfront` then `firebase deploy --only hosting --project <project-id>`
+5. Custom domain: Firebase console, Hosting, Add custom domain, then the DNS records it lists (TLS is issued automatically).
+
+Run the commands from `fedfront/`: the root `firebase.json` holds the Firestore rules and emulators and has no hosting section. Rebuild and regenerate the config together; a stale config blocks the new inline scripts.
+
 ## Known limitations
 
 - Not a git repository yet: CI (`.github/workflows/ci.yml`) is written but has never run on GitHub.
