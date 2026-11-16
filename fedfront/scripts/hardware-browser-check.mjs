@@ -59,7 +59,7 @@ out.banners = await page.locator('.mode-banner').allInnerTexts();
 await page.screenshot({ path: join(shots, 'connection.png') });
 await page.getByRole('button', { name: 'Overview', exact: true }).click();
 await page.waitForTimeout(1500);
-out.overview = { tile: await page.locator('.tile-value').innerText(), metrics: await page.locator('.metric-grid').innerText(), status: await page.locator('.status-panel').innerText() };
+out.overview = { tile: await page.locator('.rt-card').innerText(), metrics: await page.locator('.kpi-grid').innerText(), status: await page.locator('.health-panel').innerText() };
 await page.screenshot({ path: join(shots, 'overview.png') });
 await page.getByRole('button', { name: 'Live', exact: true }).click();
 await page.waitForTimeout(1500);

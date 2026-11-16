@@ -5,7 +5,7 @@ import { cn } from '@/lib/cn';
 
 const buttonVariants = cva('inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50', {
   variants: {
-    variant: { default: 'bg-accent text-white hover:brightness-110', secondary: 'border border-border bg-panel-raised text-text hover:bg-panel', ghost: 'text-text-secondary hover:bg-white/5', destructive: 'border border-bad/40 bg-bad/10 text-red-200 hover:bg-bad/20' },
+    variant: { default: 'bg-accent text-[var(--on-accent)] hover:brightness-110', secondary: 'border border-border bg-panel-raised text-text hover:bg-panel', ghost: 'text-[var(--text-secondary)] hover:bg-[var(--row-hover)]', destructive: 'border border-[var(--bad-border)] bg-[var(--bad-bg-soft)] text-[var(--bad-text)] hover:bg-[var(--bad-bg)]' },
     size: { default: 'h-10 px-4 py-2', sm: 'h-9 px-3', icon: 'h-10 w-10' },
   },
   defaultVariants: { variant: 'default', size: 'default' },

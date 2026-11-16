@@ -18,6 +18,8 @@ test('dashboard remains usable at tablet and mobile widths', async ({ page }) =>
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Intelligent Dashboard' })).toBeVisible();
+    // on a phone the navigation lives in a drawer opened from the header
+    if (width <= 720) await page.getByRole('button', { name: 'Open navigation' }).click();
     await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
     const contentWidth = await page.locator('body').evaluate((element) => element.scrollWidth);
     expect(contentWidth, `page content is ${contentWidth}px wide at a ${width}px viewport`).toBeLessThanOrEqual(width);
