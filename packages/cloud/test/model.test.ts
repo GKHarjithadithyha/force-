@@ -206,6 +206,7 @@ describe('documents', () => {
     expect(Object.values(COLLECTIONS).sort()).toEqual([
       'dailySummaries',
       'dataGaps',
+      'deviceConfigs',
       'devices',
       'energyMinutes',
       'footsteps',

@@ -19,7 +19,12 @@ import type {
 } from '../src/index.js';
 import { ANCHOR, liveSnapshot, mkStore, record } from './helpers.js';
 
-const DOWN: TransportResult = { ok: false, status: 0, error: 'Sync agent unreachable', retryable: true };
+const DOWN: TransportResult = {
+  ok: false,
+  status: 0,
+  error: 'Sync agent unreachable',
+  retryable: true,
+};
 
 /**
  * Fake agent. `policy` is what it answers; `script` may override any call's result.
@@ -44,7 +49,7 @@ function fakeTransport(
   };
   return { t, calls, policy };
 }
-const work = (calls: Array<{ path: SyncPath }>) => calls.filter((c) => c.path !== 'policy');
+const work = <T extends { path: SyncPath }>(calls: T[]) => calls.filter((c) => c.path !== 'policy');
 
 function sourceFor(store: ReturnType<typeof mkStore>) {
   return new StoreLocalSource(store, { databaseName: store.db.name });
@@ -79,9 +84,15 @@ describe('SyncClient', () => {
     expect(steps.length).toBeGreaterThan(100);
     const sent = recordsOf(calls);
     expect(sent.flatMap((r) => r.steps).map((x) => x.id)).toEqual(steps.map((x) => x.id));
-    expect(sent.flatMap((r) => r.minutes).map((x) => x.minute)).toEqual(minutes.map((m) => m.minute));
-    expect(sent.every((r) => r.bounds.startedAt === s!.startedAt && r.bounds.endedAt === s!.endedAt)).toBe(true);
-    expect(Math.max(...sent.map((r) => r.steps.length + r.minutes.length + r.gaps.length))).toBeLessThanOrEqual(50);
+    expect(sent.flatMap((r) => r.minutes).map((x) => x.minute)).toEqual(
+      minutes.map((m) => m.minute),
+    );
+    expect(
+      sent.every((r) => r.bounds.startedAt === s!.startedAt && r.bounds.endedAt === s!.endedAt),
+    ).toBe(true);
+    expect(
+      Math.max(...sent.map((r) => r.steps.length + r.minutes.length + r.gaps.length)),
+    ).toBeLessThanOrEqual(50);
 
     const commits = calls.filter((x) => x.path === 'commit');
     expect(commits).toHaveLength(1);
@@ -98,7 +109,11 @@ describe('SyncClient', () => {
   it('footsteps off (the default policy): no footstep is sent, minute step counts are', async () => {
     const store = await setup();
     const { t, calls } = fakeTransport(() => null, { footsteps: false, liveIntervalMs: 30_000 });
-    const c = new SyncClient({ source: sourceFor(store), state: new MemorySyncStateStore(), transport: t });
+    const c = new SyncClient({
+      source: sourceFor(store),
+      state: new MemorySyncStateStore(),
+      transport: t,
+    });
     await c.syncNow();
     const sent = recordsOf(calls);
     expect(sent.flatMap((r) => r.steps)).toHaveLength(0);
@@ -132,7 +147,11 @@ describe('SyncClient', () => {
   it('is idempotent: a second pass sends nothing but the policy check', async () => {
     const store = await setup();
     const { t, calls } = fakeTransport();
-    const c = new SyncClient({ source: sourceFor(store), state: new MemorySyncStateStore(), transport: t });
+    const c = new SyncClient({
+      source: sourceFor(store),
+      state: new MemorySyncStateStore(),
+      transport: t,
+    });
     await c.syncNow();
     const n = work(calls).length;
     await c.syncNow();
@@ -146,12 +165,18 @@ describe('SyncClient', () => {
     await record(store, { source: 'replay', anchor: ANCHOR + 1_000_000 });
     await record(store, { anchor: ANCHOR + 2_000_000, close: false });
     const { t, calls } = fakeTransport();
-    const c = new SyncClient({ source: sourceFor(store), state: new MemorySyncStateStore(), transport: t });
+    const c = new SyncClient({
+      source: sourceFor(store),
+      state: new MemorySyncStateStore(),
+      transport: t,
+    });
     await c.syncNow();
     expect(work(calls)).toHaveLength(0);
     await store.recoverInterrupted();
     await c.syncNow();
-    const commits = calls.filter((x) => x.path === 'commit').map((x) => (x.body as CommitPayload).session);
+    const commits = calls
+      .filter((x) => x.path === 'commit')
+      .map((x) => (x.body as CommitPayload).session);
     expect(commits).toHaveLength(1);
     expect(commits[0]!.status).toBe('interrupted');
     expect(commits[0]!.source).toBe('device');
@@ -163,7 +188,14 @@ describe('SyncClient', () => {
     // calls: 1 policy, 2-3 records ok, 4 records fails
     const { t, calls } = fakeTransport((path, n) => (path === 'records' && n === 4 ? DOWN : null));
     const state = new MemorySyncStateStore();
-    const c = new SyncClient({ source: sourceFor(store), state, transport: t, chunkSize: 40, now: () => now, random: () => 0.5 });
+    const c = new SyncClient({
+      source: sourceFor(store),
+      state,
+      transport: t,
+      chunkSize: 40,
+      now: () => now,
+      random: () => 0.5,
+    });
     const before = await store.listSessions();
 
     await c.syncNow();
@@ -214,7 +246,11 @@ describe('SyncClient', () => {
       }
       return null;
     });
-    const c = new SyncClient({ source: sourceFor(store), state: new MemorySyncStateStore(), transport: t });
+    const c = new SyncClient({
+      source: sourceFor(store),
+      state: new MemorySyncStateStore(),
+      transport: t,
+    });
     await c.syncNow();
     const paths = work(calls).map((x) => x.path);
     expect(paths[0]).toBe('records');
@@ -226,7 +262,11 @@ describe('SyncClient', () => {
   it('replaces the uploaded records when the local session is recomputed, and only rewrites the session on a rename', async () => {
     const store = await setup();
     const { t, calls } = fakeTransport();
-    const c = new SyncClient({ source: sourceFor(store), state: new MemorySyncStateStore(), transport: t });
+    const c = new SyncClient({
+      source: sourceFor(store),
+      state: new MemorySyncStateStore(),
+      transport: t,
+    });
     await c.syncNow();
     const [s] = await store.listSessions();
 
@@ -247,10 +287,17 @@ describe('SyncClient', () => {
   it('parks a session the agent refuses as invalid instead of retrying it in a loop', async () => {
     const store = await setup();
     const { t, calls } = fakeTransport((path) =>
-      path === 'commit' ? { ok: false, status: 400, error: 'session.steps: bad', retryable: false } : null,
+      path === 'commit'
+        ? { ok: false, status: 400, error: 'session.steps: bad', retryable: false }
+        : null,
     );
     let now = ANCHOR;
-    const c = new SyncClient({ source: sourceFor(store), state: new MemorySyncStateStore(), transport: t, now: () => now });
+    const c = new SyncClient({
+      source: sourceFor(store),
+      state: new MemorySyncStateStore(),
+      transport: t,
+      now: () => now,
+    });
     await c.syncNow();
     const n = work(calls).length;
     await c.syncNow();
@@ -264,9 +311,20 @@ describe('SyncClient', () => {
   it('unpaired (no or wrong token): stops at the policy check and says so', async () => {
     const store = await setup();
     const { t, calls } = fakeTransport((path) =>
-      path === 'policy' ? { ok: false, status: 401, error: 'Not paired: missing or wrong sync token', retryable: false } : null,
+      path === 'policy'
+        ? {
+            ok: false,
+            status: 401,
+            error: 'Not paired: missing or wrong sync token',
+            retryable: false,
+          }
+        : null,
     );
-    const c = new SyncClient({ source: sourceFor(store), state: new MemorySyncStateStore(), transport: t });
+    const c = new SyncClient({
+      source: sourceFor(store),
+      state: new MemorySyncStateStore(),
+      transport: t,
+    });
     await c.syncNow();
     expect(calls.map((x) => x.path)).toEqual(['policy']);
     expect(c.status()).toMatchObject({ state: 'unpaired' });
@@ -289,21 +347,36 @@ describe('SyncClient', () => {
       getToken: () => 'x'.repeat(43),
       fetchFn: (async (_url: string, init: RequestInit) => {
         seen = init;
-        return new Response(JSON.stringify({ ok: true, policy: { footsteps: false, liveIntervalMs: 30_000 } }));
+        return new Response(
+          JSON.stringify({ ok: true, policy: { footsteps: false, liveIntervalMs: 30_000 } }),
+        );
       }) as unknown as typeof fetch,
     });
     const r = await tr('policy', {});
     expect(r.ok).toBe(true);
-    expect((seen!.headers as Record<string, string>).Authorization).toBe(`Bearer ${'x'.repeat(43)}`);
+    expect((seen!.headers as Record<string, string>).Authorization).toBe(
+      `Bearer ${'x'.repeat(43)}`,
+    );
     expect(seen!.credentials).toBe('omit');
   });
 
   it('live status: 30 s by default, device snapshots only, immediate update on a connection change', async () => {
     let now = ANCHOR;
     const { t, calls } = fakeTransport();
-    const c = new SyncClient({ source: sourceFor(mkStore()), state: new MemorySyncStateStore(), transport: t, now: () => now });
+    const c = new SyncClient({
+      source: sourceFor(mkStore()),
+      state: new MemorySyncStateStore(),
+      transport: t,
+      now: () => now,
+    });
     c.start();
-    const info = { deviceId: 'FORCE-71B6', name: 'FORCE-71B6', firmwareVersion: '1.0.0', sampleRateHz: 20, sensorLimitMa: 3200 };
+    const info = {
+      deviceId: 'FORCE-71B6',
+      name: 'FORCE-71B6',
+      firmwareVersion: '1.0.0',
+      sampleRateHz: 20,
+      sensorLimitMa: 3200,
+    };
     const snap = liveSnapshot();
     const flush = () => new Promise((r) => setTimeout(r, 0));
     const live = () => calls.filter((x) => x.path === 'live');
@@ -336,7 +409,11 @@ describe('SyncClient', () => {
         throw new Error('IndexedDB closed');
       },
     } as unknown as StoreLocalSource;
-    const c = new SyncClient({ source: broken, state: new MemorySyncStateStore(), transport: fakeTransport().t });
+    const c = new SyncClient({
+      source: broken,
+      state: new MemorySyncStateStore(),
+      transport: fakeTransport().t,
+    });
     await expect(c.syncNow()).resolves.toBeUndefined();
     expect(c.status().state).toBe('offline');
     expect(c.status().lastError).toMatch(/IndexedDB closed/);

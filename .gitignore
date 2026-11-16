@@ -24,3 +24,6 @@ ui-debug.log
 .claude/worktrees/
 .worktrees/
 .agent-board/
+
+# Original Android app source (own git repo, holds .env.local secrets and large archives): never commit here
+/anriod  app/

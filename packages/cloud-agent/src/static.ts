@@ -33,7 +33,8 @@ export const BASE_SECURITY_HEADERS: Record<string, string> = {
   'Referrer-Policy': 'no-referrer',
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Cross-Origin-Resource-Policy': 'same-origin',
-  'Permissions-Policy': 'bluetooth=(self), camera=(), microphone=(), geolocation=(), usb=(), serial=()',
+  'Permissions-Policy':
+    'bluetooth=(self), camera=(), microphone=(), geolocation=(), usb=(), serial=()',
 };
 
 const INLINE_SCRIPT_RE = /<script(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script>/gi;
@@ -129,7 +130,9 @@ export function createStaticHandler(dir: string) {
       res.writeHead(found ? 200 : 404, headers);
       res.end(req.method === 'HEAD' ? undefined : body);
     } catch {
-      res.writeHead(404, { ...BASE_SECURITY_HEADERS, 'Content-Type': 'text/plain' }).end('Not found');
+      res
+        .writeHead(404, { ...BASE_SECURITY_HEADERS, 'Content-Type': 'text/plain' })
+        .end('Not found');
     }
   };
 }

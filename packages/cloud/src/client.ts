@@ -142,8 +142,7 @@ export function backoffMs(failures: number, random = Math.random): number {
 /** Reads `{ policy }` from an agent answer, or null. */
 export function policyOf(data: unknown): AgentPolicy | null {
   const p = (data as { policy?: unknown } | null | undefined)?.policy as
-    | Partial<AgentPolicy>
-    | undefined;
+    Partial<AgentPolicy> | undefined;
   if (!p || typeof p.footsteps !== 'boolean' || typeof p.liveIntervalMs !== 'number') return null;
   return { footsteps: p.footsteps, liveIntervalMs: p.liveIntervalMs };
 }
@@ -617,7 +616,12 @@ export function fetchTransport(
   return async (path, body) => {
     const token = opts.getToken?.() ?? null;
     if (!token) {
-      return { ok: false, status: 401, error: 'Not paired: enter the sync token', retryable: false };
+      return {
+        ok: false,
+        status: 401,
+        error: 'Not paired: enter the sync token',
+        retryable: false,
+      };
     }
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeoutMs);

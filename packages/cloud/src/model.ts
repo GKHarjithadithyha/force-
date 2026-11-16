@@ -53,7 +53,11 @@ export const DEVICE_ID_RE = /^FORCE-[0-9A-F]{4}$/;
 
 /** Session ids are made by the pipeline as `${deviceId}-...`, so a session belongs to one device. */
 export function isSessionOf(deviceId: string, sessionId: string): boolean {
-  return DEVICE_ID_RE.test(deviceId) && sessionId.startsWith(`${deviceId}-`) && sessionId.length > deviceId.length + 1;
+  return (
+    DEVICE_ID_RE.test(deviceId) &&
+    sessionId.startsWith(`${deviceId}-`) &&
+    sessionId.length > deviceId.length + 1
+  );
 }
 
 /**
@@ -439,7 +443,12 @@ export function toDeviceConfigDoc(
   p: DevicePayload,
   site: { id: string; name: string } | null,
 ): DeviceConfigDoc {
-  return { schemaVersion: CLOUD_SCHEMA_VERSION, deviceId: p.info.deviceId, profile: p.profile, site };
+  return {
+    schemaVersion: CLOUD_SCHEMA_VERSION,
+    deviceId: p.info.deviceId,
+    profile: p.profile,
+    site,
+  };
 }
 
 export function toSessionDoc<T>(

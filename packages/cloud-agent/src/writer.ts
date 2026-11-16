@@ -173,10 +173,7 @@ export class CloudWriter {
       );
     }
     const known = this.bounds.get(p.sessionId);
-    if (
-      known &&
-      (known.startedAt !== p.bounds.startedAt || known.endedAt !== p.bounds.endedAt)
-    ) {
+    if (known && (known.startedAt !== p.bounds.startedAt || known.endedAt !== p.bounds.endedAt)) {
       throw new ValidationError('bounds: differ from earlier records of this session');
     }
     this.bounds.set(p.sessionId, p.bounds);

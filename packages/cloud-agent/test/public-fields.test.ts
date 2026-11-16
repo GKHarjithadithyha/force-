@@ -7,9 +7,51 @@ afterEach(closeAll);
 
 /** The approved field sets of the three publicly readable collections. */
 const PUBLIC = {
-  [COLLECTIONS.devices]: ['schemaVersion', 'deviceId', 'name', 'firmwareVersion', 'info', 'lastSeenAt', 'createdAt', 'syncedAt'],
-  [COLLECTIONS.dailySummaries]: ['schemaVersion', 'deviceId', 'date', 'timeZone', 'dayStart', 'dayEnd', 'steps', 'energyWh', 'energyNj2', 'recordedMs', 'peakPowerW', 'sessions', 'estimated', 'computedAt', 'syncedAt'],
-  [COLLECTIONS.liveStatus]: ['schemaVersion', 'deviceId', 'connection', 'sessionId', 'sampleAt', 'lastPacketAt', 'measurementValid', 'inputPresent', 'generating', 'measured', 'link', 'calculated', 'estimated', 'quality', 'alerts', 'syncedAt'],
+  [COLLECTIONS.devices]: [
+    'schemaVersion',
+    'deviceId',
+    'name',
+    'firmwareVersion',
+    'info',
+    'lastSeenAt',
+    'createdAt',
+    'syncedAt',
+  ],
+  [COLLECTIONS.dailySummaries]: [
+    'schemaVersion',
+    'deviceId',
+    'date',
+    'timeZone',
+    'dayStart',
+    'dayEnd',
+    'steps',
+    'energyWh',
+    'energyNj2',
+    'recordedMs',
+    'peakPowerW',
+    'sessions',
+    'estimated',
+    'computedAt',
+    'syncedAt',
+  ],
+  [COLLECTIONS.liveStatus]: [
+    'schemaVersion',
+    'deviceId',
+    'connection',
+    'sessionId',
+    'sampleAt',
+    'lastPacketAt',
+    'measurementValid',
+    'inputPresent',
+    'generating',
+    'measured',
+    'link',
+    'calculated',
+    'estimated',
+    'quality',
+    'alerts',
+    'syncedAt',
+  ],
 };
 
 describe('public documents contain only approved fields (P1, P3, site private)', () => {
@@ -20,7 +62,15 @@ describe('public documents contain only approved fields (P1, P3, site private)',
     const snap = {
       ...liveSnapshot(),
       sessionId: `${DEVICE}-mhz3k2a1`,
-      alerts: [{ id: 'x', kind: 'no_input', severity: 'warning', since: T0, message: 'Installed at <secret address>' }],
+      alerts: [
+        {
+          id: 'x',
+          kind: 'no_input',
+          severity: 'warning',
+          since: T0,
+          message: 'Installed at <secret address>',
+        },
+      ],
     };
     expect((await a.post('live', { deviceId: DEVICE, snapshot: snap })).status).toBe(200);
 

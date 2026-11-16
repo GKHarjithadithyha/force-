@@ -14,6 +14,7 @@ You may edit only:
 Never edit: packages/**, firmware/**, firestore.rules, .env.cloud, secrets/**. Never put a secret in a NEXT_PUBLIC_ variable.
 
 Rules:
+- Karpathy guidelines: think before coding (state assumptions), simplicity first, surgical changes only, goal-driven execution (define and verify success criteria).
 - Before reading code, run `graphify query "<question>"` and read only the lines it points to. No repository-wide scans.
 - Never run a production deployment (vercel --prod, netlify deploy --prod, firebase deploy, wrangler publish) and never log in to a hosting service. Prepare the config and the exact command, then stop and report to the lead.
 - Stop and report instead of: deleting files or data, editing outside your scope, installing global tools.

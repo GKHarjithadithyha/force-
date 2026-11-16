@@ -26,7 +26,10 @@ export class RateLimiter {
   /** Takes one token; returns 0 when allowed, else the seconds to wait. */
   take(): number {
     const t = this.now();
-    this.tokens = Math.min(this.capacity, this.tokens + ((t - this.last) * this.perMinute) / 60_000);
+    this.tokens = Math.min(
+      this.capacity,
+      this.tokens + ((t - this.last) * this.perMinute) / 60_000,
+    );
     this.last = t;
     if (this.tokens >= 1) {
       this.tokens -= 1;
@@ -104,7 +107,11 @@ export function createSyncHandler(o: HandlerOptions) {
 
     const origin = req.headers.origin;
     const corsOk = origin !== undefined && origins.has(origin);
-    const send = (status: number, body: Record<string, unknown>, extra: Record<string, string> = {}) => {
+    const send = (
+      status: number,
+      body: Record<string, unknown>,
+      extra: Record<string, string> = {},
+    ) => {
       res
         .writeHead(status, {
           ...BASE_SECURITY_HEADERS,
@@ -149,11 +156,17 @@ export function createSyncHandler(o: HandlerOptions) {
 
     if (action === 'health' && req.method === 'GET') {
       // without the token: only "the agent is running"; with it: details (never secrets)
-      send(200, isAuthed ? { ok: true, ...o.health() } : { ok: true, service: 'force-cloud-agent' });
+      send(
+        200,
+        isAuthed ? { ok: true, ...o.health() } : { ok: true, service: 'force-cloud-agent' },
+      );
       return true;
     }
 
-    const actions: Record<string, { group: 'write' | 'live' | 'policy'; run: (b: unknown) => Promise<number> }> = {
+    const actions: Record<
+      string,
+      { group: 'write' | 'live' | 'policy'; run: (b: unknown) => Promise<number> }
+    > = {
       policy: { group: 'policy', run: async () => 0 },
       reset: { group: 'write', run: (b) => o.writer.reset(parseReset(b)) },
       records: { group: 'write', run: (b) => o.writer.records(parseRecords(b, now())) },
@@ -169,13 +182,21 @@ export function createSyncHandler(o: HandlerOptions) {
     if (!isAuthed) {
       const wait = limits.authFailure.take();
       if (wait > 0) {
-        send(429, { ok: false, error: 'Too many failed attempts' }, { 'Retry-After': String(wait) });
+        send(
+          429,
+          { ok: false, error: 'Too many failed attempts' },
+          { 'Retry-After': String(wait) },
+        );
         return true;
       }
       o.log('warn', `Refused ${action}: missing or wrong sync token`);
-      send(401, { ok: false, error: 'Not paired: missing or wrong sync token' }, {
-        'WWW-Authenticate': 'Bearer',
-      });
+      send(
+        401,
+        { ok: false, error: 'Not paired: missing or wrong sync token' },
+        {
+          'WWW-Authenticate': 'Bearer',
+        },
+      );
       return true;
     }
 

@@ -14,6 +14,7 @@ You may edit only:
 Never edit: firmware/**, packages/protocol/**, packages/engine/**, packages/device/**, packages/storage/src/db.ts (Dexie schema), fedfront/**, .env.cloud, secrets/**, any service-account file.
 
 Rules:
+- Karpathy guidelines: think before coding (state assumptions), simplicity first, surgical changes only, goal-driven execution (define and verify success criteria).
 - Before reading code, run `graphify query "<question>"` and read only the lines it points to. No repository-wide scans, no reading whole large files.
 - Never connect to a real Firebase project, never create, read or print credentials or tokens, never deploy rules or indexes. Use the in-memory DocStore or the Firestore emulator only.
 - Stop and report to the lead instead of: deleting files or data, editing outside your scope, installing global tools, anything involving credentials or production.

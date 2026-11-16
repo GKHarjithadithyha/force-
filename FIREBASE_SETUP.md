@@ -22,13 +22,13 @@ The dashboard has no back-end server. Everything below "existing" runs inside Ch
  │                                         dashboard (live + history)            │ read    │
  │                                                                               ▼ only    │
  │                       @force/cloud SyncClient: finished real-device sessions,         │  new
- │                       live status every 10 s, upload progress in IndexedDB "force-sync"│
+ │                       live status every 30 s, upload progress in IndexedDB "force-sync"│
  └───────────────────────────────────────────────┬──────────────────────────────────────┘
                                                  │ HTTP POST JSON to 127.0.0.1:8787
                                                  ▼
  ┌────────────── local sync agent (Node, this laptop, npm run cloud:agent) ─────────────┐
  │  serves the dashboard (fedfront/out) + /api/sync/v1/*                                 │  new
- │  validates every payload ─► maps to documents ─► Firebase Admin SDK (service-account) │
+ │  checks the pairing token, validates every payload ─► maps to documents ─► Firebase Admin SDK (service-account) │
  └───────────────────────────────────────────────┬──────────────────────────────────────┘
                                                  ▼ HTTPS
                                      Cloud Firestore (your project)
@@ -57,6 +57,7 @@ All documents carry `schemaVersion: 1` and `syncedAt` (the server time of the la
 | `footsteps` | the engine's existing step key `{deviceId}_{UTC time}` | detected step | readers with the `forceReader` claim |
 | `energyMinutes` | `{sessionId}_{epochMinute}` | clock minute of a session | readers with the `forceReader` claim |
 | `dataGaps` | `{sessionId}_{startMs}` | gap in a session | readers with the `forceReader` claim |
+| `deviceConfigs` | `{deviceId}` | ESP32 tile: **private** settings profile and installation site | readers with the `forceReader` claim |
 
 Flat top-level collections, each with `deviceId` and `sessionId` fields, make "all devices" and "one session" queries simple.
 
@@ -70,11 +71,14 @@ Values are grouped so that measured, calculated and estimated values are never c
 **`devices/{deviceId}`**
 - `deviceId`, `name`, `firmwareVersion`: from the Device Info characteristic.
 - `info.sampleRateHz` (Hz) and `info.sensorLimitMa` (mA): Device Info.
+- `lastSeenAt`, `createdAt` (first write only), `syncedAt`.
+- The public document has **no** `profile` and **no** `site`. They live in `deviceConfigs`.
+
+**`deviceConfigs/{deviceId}`** (private)
 - `profile`: the engine's settings profile (thresholds, emission factor and score weights). Its factors are **placeholders** until agreed.
 - `site`: `{ id, name }` from `FORCE_SITE_ID` and `FORCE_SITE_NAME`, or `null`.
-- `lastSeenAt`, `createdAt` (first write only), `syncedAt`.
 
-**`liveStatus/{deviceId}`** is the latest state, so a website or the Android app needs no history reads. It is written at most every 10 s while the device is connected, plus once on every connection change.
+**`liveStatus/{deviceId}`** is the latest state, so a website or the Android app needs no history reads. It is written at most every `FORCE_SYNC_LIVE_INTERVAL_S` seconds (default 30) while the device is connected, plus once on every connection change.
 - `connection`, `sessionId`, `sampleAt`, `lastPacketAt`, `measurementValid`, `inputPresent`, `generating`.
 - `measured`: `{ voltageV` (V), `currentMa` (mA), `powerW` (W) `}`. It is `null` unless the newest sample is a valid measurement, the same rule the dashboard uses.
 - `link`: `{ rssiDbm, sampleRateHz }`.
@@ -132,7 +136,7 @@ Values are grouped so that measured, calculated and estimated values are never c
 - footsteps and minutes of a device, newest first;
 - daily summaries of a device, newest first.
 
-Use `limit()` with `startAfter()` for pagination.
+Use `limit()` with `startAfter()` for pagination. The rules require a `limit` on every list query (see section 5).
 
 ---
 
@@ -140,10 +144,10 @@ Use `limit()` with `startAfter()` for pagination.
 
 | Existing (where) | Firestore | Notes |
 | --- | --- | --- |
-| `DeviceInfo` + `DeviceRow.lastSeen` (`packages/contracts`, `packages/storage/src/db.ts`) | `devices` | plus the `DeviceProfile` |
+| `DeviceInfo` + `DeviceRow.lastSeen` (`packages/contracts`, `packages/storage/src/db.ts`) | `devices` | the `DeviceProfile` and site go to the private `deviceConfigs` |
 | `LiveSnapshot` (`packages/contracts`) | `liveStatus` | throttled; device source only |
 | `SessionSummary` / `SessionRow` (`packages/contracts`, `db.ts`) | `sessions` | closed or interrupted, `source: 'device'` only |
-| `StepEvent` / `StepRow` (`packages/contracts`, `db.ts`) | `footsteps` | the id is the engine's idempotency key |
+| `StepEvent` / `StepRow` (`packages/contracts`, `db.ts`) | `footsteps` | only when `FORCE_SYNC_FOOTSTEPS=on`; the id is the engine's idempotency key |
 | `MinuteBucket` / `MinuteRow` (`packages/engine/src/session.ts`, `db.ts`) | `energyMinutes` | integer energy kept exactly |
 | `GapRecord` / `GapRow` | `dataGaps` | |
 | `RangeTotals` from `Store.getTotalsExact` (`packages/storage/src/store.ts`) | `dailySummaries` | same aggregation as `getTotals` |
@@ -156,7 +160,7 @@ Use `limit()` with `startAfter()` for pagination.
 **Done locally**
 1. **Pending work is derived, not queued.** Every 15 s, and when the browser comes back online, the client lists the completed real-device sessions in IndexedDB `force`. Each is compared with its saved upload progress in IndexedDB `force-sync`.
 2. **Progress is recorded only after the agent confirms the write.** For each session:
-   - Send `records` in chunks of at most 400 (footsteps, then minutes, then gaps), saving a cursor after each confirmed chunk.
+   - Send `records` in chunks of at most 400 (footsteps only when enabled, then minutes, then gaps), saving a cursor after each confirmed chunk.
    - Then send `commit`: the device, the daily summaries and the session document, in one atomic Firestore batch. The session document is written last.
 3. **Idempotent.** Every document id is stable and every write is a full `set`. Retries, restarts or a lost `force-sync` database cause re-writes of identical documents, never duplicates.
 4. **Changes**
@@ -183,7 +187,7 @@ Use `limit()` with `startAfter()` for pagination.
 **Visibility**
 9. **Status:** the Connection screen shows a **Cloud Sync** panel when sync is on: status, synced, pending and refused counts, last upload, next retry, live status and last error.
    - The agent logs every failure and retry, never key material.
-   - `GET http://127.0.0.1:8787/api/sync/v1/health` reports the Firestore state, write and failure counts, and the last error.
+   - `GET http://127.0.0.1:8787/api/sync/v1/health` reports the Firestore state, write and failure counts, and the last error. Without the pairing token it only answers `ok`.
 
 ---
 
@@ -194,6 +198,10 @@ Use `limit()` with `startAfter()` for pagination.
   - Only the agent reads it.
   - It is never in the browser bundle, `NEXT_PUBLIC_` variables, Git or chat.
   - `.gitignore` excludes `.env.cloud`, `secrets/` and `*service-account*.json`.
+- **Pairing token.** Every agent call except the static dashboard files and a bare `health` check needs `Authorization: Bearer <FORCE_SYNC_TOKEN>`.
+  - Create it with `npm run cloud:token` and put the printed line in `.env.cloud`. The agent refuses to start without one (at least 32 characters).
+  - Paste it once into the dashboard (**Connection > Cloud Sync**). The dashboard stores it locally. Without it the sync client stays idle and shows "not paired".
+  - It is a local secret, not a Firebase credential. Run the command again to rotate it, then restart the agent and re-pair.
 - **The agent listens on 127.0.0.1 only.** Because any web page could try to reach a local port, it:
   - checks the `Host` header (blocks DNS rebinding);
   - accepts browser requests only from its own origin plus `FORCE_SYNC_ALLOWED_ORIGINS`;
@@ -202,8 +210,11 @@ Use `limit()` with `startAfter()` for pagination.
   - validates every field before writing.
 - **Firestore rules (`firestore.rules`):**
   - No client can write anything. The Admin SDK used by the agent bypasses rules, so the agent is the only writer.
-  - Anyone can read `devices`, `liveStatus` and `dailySummaries`.
-  - `sessions`, `footsteps`, `energyMinutes` and `dataGaps` need a signed-in user with the custom claim `forceReader: true`, granted with `npm run cloud:grant-reader -- <email>`. Creating an account is not enough.
+  - Anyone can read `devices`, `liveStatus` and `dailySummaries`. A list query must set `limit` of at most 100; a single `get` is always allowed.
+  - `deviceConfigs` (settings profile and installation site) is private: readers only.
+  - `sessions`, `footsteps`, `energyMinutes` and `dataGaps` need a signed-in user with the custom claim `forceReader: true`, granted with `npm run cloud:grant-reader -- <email>`. Creating an account is not enough. Their list queries need `limit` of at most 500.
+  - Every other path is denied.
+  - Test the rules with `npm run cloud:test:rules` (needs Java and the Firestore emulator; it never touches a real project).
 - **The Firebase web or Android config (`apiKey`, `appId`, …) is not a secret.** Access is controlled by the rules above.
 
 ---
@@ -247,6 +258,9 @@ Copy `D:\FED\.env.cloud.example` to `D:\FED\.env.cloud`. That file is git-ignore
 | `FIREBASE_PROJECT_ID` | `D:\FED\.env.cloud` | your project id | Console > Project settings > General | no | local agent |
 | `GOOGLE_APPLICATION_CREDENTIALS` | `D:\FED\.env.cloud` | full path to the JSON from step 4 | the file you saved | the **file** is secret; the path is not | local agent |
 | `FIRESTORE_DATABASE_ID` | `D:\FED\.env.cloud` | empty, unless you named the database | Firestore Database page | no | local agent |
+| `FORCE_SYNC_TOKEN` | `D:\FED\.env.cloud` | the output of `npm run cloud:token` | you generate it | **yes** (local) | local agent; also pasted once into the dashboard |
+| `FORCE_SYNC_FOOTSTEPS` | `D:\FED\.env.cloud` | `off` (default) or `on` | n/a | no | local agent |
+| `FORCE_SYNC_LIVE_INTERVAL_S` | `D:\FED\.env.cloud` | `30` (default), 10 to 600 | n/a | no | local agent |
 | `FORCE_SYNC_PORT` | `D:\FED\.env.cloud` | `8787` (default) | your choice, 1024 to 65535 | no | local agent |
 | `FORCE_SYNC_STATIC_DIR` | `D:\FED\.env.cloud` | empty (`fedfront/out`), or `off` | n/a | no | local agent |
 | `FORCE_SYNC_ALLOWED_ORIGINS` | `D:\FED\.env.cloud` | empty; `http://localhost:3000` only when using `next dev` | n/a | no | local agent |
@@ -263,11 +277,12 @@ Never set `FIREBASE_PRIVATE_KEY` or paste key contents into any `.env` file. The
 ### Step 6. Check, build and run
 From `D:\FED`:
 ```
+npm run cloud:token          # once: prints FORCE_SYNC_TOKEN=...; put it in .env.cloud
 npm run cloud:check          # validates .env.cloud and the key file, then reads Firestore; exit 0 = OK
 npm run web:build            # rebuild the dashboard so NEXT_PUBLIC_CLOUD_SYNC_URL is included
 npm run cloud:agent          # serves http://127.0.0.1:8787 and the sync API; Ctrl+C to stop
 ```
-Open **http://127.0.0.1:8787** in Chrome or Edge. Web Bluetooth works there because 127.0.0.1 counts as a secure origin. Connect to the tile as usual. Use this address from now on: the old `serve-static` preview on 8080 does not sync.
+Open **http://127.0.0.1:8787** in Chrome or Edge. Web Bluetooth works there because 127.0.0.1 counts as a secure origin. Open **Connection > Cloud Sync** and paste the token once. Connect to the tile as usual. Use this address from now on: the old `serve-static` preview on 8080 does not sync.
 
 Development with `next dev`:
 - set `FORCE_SYNC_ALLOWED_ORIGINS=http://localhost:3000` in `.env.cloud`;
@@ -285,12 +300,12 @@ Development with `next dev`:
 ## 7. Verify that data reaches Firestore
 
 1. `npm run cloud:check` prints `Firestore connection OK` and exits 0.
-2. While the agent runs, `curl http://127.0.0.1:8787/api/sync/v1/health` returns `"firestore":"ok"`.
-3. Connect the tile at http://127.0.0.1:8787. Within about 10 s, **Firestore Database > Data > liveStatus > FORCE-xxxx** appears and updates.
+2. While the agent runs, `curl -H "Authorization: Bearer <FORCE_SYNC_TOKEN>" http://127.0.0.1:8787/api/sync/v1/health` returns `"firestore":"ok"`.
+3. Connect the tile at http://127.0.0.1:8787. Within about 30 s, **Firestore Database > Data > liveStatus > FORCE-xxxx** appears and updates.
 4. Walk on the tile, then press **Disconnect**. Within about 15 s the Connection screen's Cloud Sync panel shows `Sessions synced: 1` and `Sessions pending: 0`. Firestore then has:
    - `sessions/<id>`;
-   - its `footsteps`, `energyMinutes` and `dailySummaries/<device>_<today>`;
-   - `devices/<device>`.
+   - its `energyMinutes` and `dailySummaries/<device>_<today>` (and `footsteps` only if `FORCE_SYNC_FOOTSTEPS=on`);
+   - `devices/<device>` and the private `deviceConfigs/<device>`.
 5. Cross-check:
    - the session's `steps` matches the Sessions screen;
    - `dailySummaries.steps` matches the Overview "today" value for that device.
@@ -318,7 +333,7 @@ Development with `next dev`:
 ## 9. Reading the data from the website and the Android app
 
 1. In **Project settings > General > Your apps**, add a **Web** app and an **Android** app (package name required). Copy the generated config into those apps. It is not secret.
-2. Public reads need no sign-in. Web example (Firebase JS SDK v10+):
+2. Public reads (`devices`, `liveStatus`, `dailySummaries`) need no sign-in, but every list needs `limit(100)` or less. The exact REST paths, field table, freshness rules and error handling are in `.agent-board/CLOUD_READ_SPEC.md`. Web example (Firebase JS SDK v10+):
    ```js
    import { initializeApp } from 'firebase/app';
    import { getFirestore, doc, onSnapshot, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
@@ -330,7 +345,8 @@ Development with `next dev`:
    Android (Kotlin): use `Firebase.firestore.collection("liveStatus").document("FORCE-71B6").addSnapshotListener { … }` and the same query shape.
 3. History (`sessions`, `footsteps`, `energyMinutes`, `dataGaps`):
    - sign in with Firebase Auth as a user granted `forceReader`;
-   - query by `sessionId` or `deviceId` with `orderBy` and `limit`;
+   - query by `sessionId` or `deviceId` with `orderBy` and `limit` (at most 500);
+   - `deviceConfigs` (profile, site) is readable the same way and is never public;
    - paginate with `startAfter(lastDoc)`.
 4. Any write from the website or app is refused by the rules, by design.
 
@@ -340,17 +356,17 @@ Development with `next dev`:
 
 1. **Firebase replaces the Supabase plan** in `FORCE_Dashboard_Tech_Stack.md` (recorded as H-30 in `docs/DECISIONS.md`).
 2. **The agent must run, and the dashboard must be opened from it** (http://127.0.0.1:8787), for uploads to happen. Without it everything still works locally, and sessions upload the next time the agent runs.
-3. **Cost and free-tier limit: one document per footstep.**
-   - At 100 steps/min that is about 6,000 writes per walking hour, and the Spark free tier allows 20,000 writes per day.
-   - Live status adds about 360 writes per connected hour.
-   - **Decision needed:** keep per-step documents, or upload only minutes and summaries. Switching would be a small change in the agent.
+3. **Footsteps are off by default** (`FORCE_SYNC_FOOTSTEPS=off`), to stay inside the free tier.
+   - With `on`, there is one document per footstep: at 100 steps/min about 6,000 writes per walking hour, against 20,000 writes per day on the Spark plan.
+   - Live status adds about 120 writes per connected hour at the default 30 s.
+   - Minutes, summaries and sessions are always uploaded. Turning footsteps on later does not back-fill sessions already uploaded.
 4. **Deleting data locally does not delete it in Firestore**, whether one session or "Delete all data". Delete in the console if needed.
 5. **The daily summary time zone** is the recording laptop's. If two laptops in different zones record the same device, their summaries for a "date" use different bounds; each records its `timeZone`.
 6. **A daily summary** is refreshed when a session of that day is uploaded. During an open session, use `liveStatus` for today's running values.
 7. **A backup restored under a renamed id** (`…-import`) on a laptop whose original was already uploaded would appear as a second session in Firestore.
 8. **Estimated values** (CO₂, LED hours, phone charges, score) use the **placeholder** emission factor and score settings in the profile, exactly as on the dashboard.
 9. **Not done:**
-   - Firestore emulator and rules tests: Java and `firebase-tools` are not installed here. `packages/cloud-agent/test/emulator.test.ts` runs when `FIRESTORE_EMULATOR_HOST` is set.
+   - Firestore emulator and rules tests (`npm run cloud:test:rules`): Java is not installed here, so they are skipped and **unverified**. They run when `FIRESTORE_EMULATOR_HOST` is set.
    - A real-project test: it needs your credentials.
 10. **There is no Android app in this repository.** Section 9 shows how one should read the data.
 
@@ -359,7 +375,7 @@ Development with `next dev`:
 ## 11. Files
 
 - `packages/cloud/`: Firestore model, ids, units, the browser sync client, IndexedDB adapters (no Firebase SDK, no secrets).
-- `packages/cloud-agent/`: local agent with config checks, validation, writer, HTTP API, static server, `grant-reader`.
+- `packages/cloud-agent/`: local agent with config checks, validation, writer, HTTP API, static server, `grant-reader`, `token` (pairing token generator).
 - `firestore.rules`, `firestore.indexes.json`, `firebase.json` (emulator ports 8085 and 9099).
 - `.env.cloud.example` (agent) and `fedfront/.env.example` (`NEXT_PUBLIC_CLOUD_SYNC_URL`).
 - Changed:

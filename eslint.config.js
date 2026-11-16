@@ -26,7 +26,14 @@ export default tseslint.config(
       'apps/**',
       // the frontend developer's standalone app has its own toolchain
       'fedfront/**',
+      // agent worktrees and the original Android app are separate checkouts with their own configs
+      '.worktrees/**',
+      '.claude/worktrees/**',
+      'anriod  app/**',
     ],
+  },
+  {
+    languageOptions: { parserOptions: { tsconfigRootDir: import.meta.dirname } },
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

@@ -15,7 +15,12 @@ afterEach(closeAll);
 
 const source = (store: ReturnType<typeof mkStore>) =>
   new StoreLocalSource(store, { databaseName: store.db.name });
-const client = (store: ReturnType<typeof mkStore>, base: string, token: string | null = TOKEN, extra = {}) =>
+const client = (
+  store: ReturnType<typeof mkStore>,
+  base: string,
+  token: string | null = TOKEN,
+  extra = {},
+) =>
   new SyncClient({
     source: source(store),
     state: new MemorySyncStateStore(),
@@ -25,7 +30,13 @@ const client = (store: ReturnType<typeof mkStore>, base: string, token: string |
 
 async function recorded() {
   const store = mkStore();
-  await store.saveDevice({ deviceId: 'FORCE-71B6', name: 'FORCE-71B6', firmwareVersion: '1.0.0', sampleRateHz: 20, sensorLimitMa: 3200 });
+  await store.saveDevice({
+    deviceId: 'FORCE-71B6',
+    name: 'FORCE-71B6',
+    firmwareVersion: '1.0.0',
+    sampleRateHz: 20,
+    sensorLimitMa: 3200,
+  });
   await record(store, { durationMs: 150_000 });
   await record(store, { source: 'demo', deviceId: 'demo', anchor: ANCHOR + 500_000 });
   return store;
@@ -47,7 +58,10 @@ describe('end to end: local database -> sync client -> HTTP agent -> Firestore d
     expect(col(COLLECTIONS.footsteps).size).toBe(0); // footsteps disabled by default
     expect((await store.getSessionSteps(s!.id)).length).toBe(s!.steps); // still all stored locally
     expect(col(COLLECTIONS.energyMinutes).size).toBe(minutes.length);
-    const minuteSteps = [...col(COLLECTIONS.energyMinutes).values()].reduce((a, d) => a + (d.steps as number), 0);
+    const minuteSteps = [...col(COLLECTIONS.energyMinutes).values()].reduce(
+      (a, d) => a + (d.steps as number),
+      0,
+    );
     expect(minuteSteps).toBe(s!.steps); // per-minute step counts carry every step
 
     const sessionDoc = col(COLLECTIONS.sessions).get(s!.id)!;
@@ -57,7 +71,10 @@ describe('end to end: local database -> sync client -> HTTP agent -> Firestore d
     expect(sessionDoc.startedAt).toEqual(new Date(s!.startedAt));
 
     const day = [...col(COLLECTIONS.dailySummaries).values()][0]!;
-    const totals = await store.getTotals((day.dayStart as Date).getTime(), (day.dayEnd as Date).getTime());
+    const totals = await store.getTotals(
+      (day.dayStart as Date).getTime(),
+      (day.dayEnd as Date).getTime(),
+    );
     expect(day.steps).toBe(totals.steps);
     expect(day.energyWh).toBe(totals.energyWh);
     expect(day.sessions).toBe(1);
@@ -82,10 +99,18 @@ describe('end to end: local database -> sync client -> HTTP agent -> Firestore d
 
     const dump = () =>
       JSON.stringify(
-        [...agent.docs.collections.entries()].map(([k, v]) => [
-          k,
-          [...v.entries()].map(([id, d]) => [id, { ...d, syncedAt: 0, createdAt: d.createdAt ? 1 : 0, computedAt: 0 }]),
-        ]),
+        [...agent.docs.collections.entries()]
+          .filter(([, v]) => v.size > 0)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([k, v]) => [
+            k,
+            [...v.entries()]
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([id, d]) => [
+                id,
+                { ...d, syncedAt: 0, createdAt: d.createdAt ? 1 : 0, computedAt: 0 },
+              ]),
+          ]),
       );
     const before = dump();
     // a lost sync state: the agent answers 409, the client resets and uploads again
@@ -129,7 +154,10 @@ describe('end to end: local database -> sync client -> HTTP agent -> Firestore d
     const c = new SyncClient({
       source: source(store),
       state: new MemorySyncStateStore(),
-      transport: fetchTransport('http://127.0.0.1:9/api/sync/v1', { timeoutMs: 2_000, getToken: () => TOKEN }),
+      transport: fetchTransport('http://127.0.0.1:9/api/sync/v1', {
+        timeoutMs: 2_000,
+        getToken: () => TOKEN,
+      }),
     });
     await c.syncNow();
     expect(c.status().state).toBe('offline');

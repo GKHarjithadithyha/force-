@@ -27,13 +27,14 @@ export async function startAgent(
   } = {},
 ) {
   const docs = opts.docs ?? new MemoryDocStore();
+  const logs: string[] = [];
   const writer = new CloudWriter(docs, {
+    log: (level, m) => logs.push(`${level} ${m}`),
     site: { id: 'lab-1', name: 'Florix lab, ground floor' },
     minLiveGapMs: 0,
     liveIntervalMs: 0,
     ...opts.writer,
   });
-  const logs: string[] = [];
   const server = createServer((req, res) => {
     void handler(req, res).then((handled) => {
       if (!handled) res.writeHead(404).end();
@@ -89,7 +90,13 @@ export function commit(over: Partial<CommitPayload> = {}): CommitPayload {
     energyNj2: '7200000000',
     counts: { steps: 10, minutes: 3, gaps: 0 },
     device: {
-      info: { deviceId: s.deviceId, name: s.deviceId, firmwareVersion: '1.0.0', sampleRateHz: 20, sensorLimitMa: 3200 },
+      info: {
+        deviceId: s.deviceId,
+        name: s.deviceId,
+        firmwareVersion: '1.0.0',
+        sampleRateHz: 20,
+        sensorLimitMa: 3200,
+      },
       lastSeenMs: T0 + 120_000,
       profile: {
         idleThresholdW: 0.05,

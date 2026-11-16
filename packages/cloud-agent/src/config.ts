@@ -164,7 +164,9 @@ export function loadConfig(
         );
       }
       if (u.origin !== o.replace(/\/+$/, '')) {
-        throw new ConfigError(`FORCE_SYNC_ALLOWED_ORIGINS: "${o}" must be an origin only (no path)`);
+        throw new ConfigError(
+          `FORCE_SYNC_ALLOWED_ORIGINS: "${o}" must be an origin only (no path)`,
+        );
       }
       if (u.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(u.hostname)) {
         throw new ConfigError(
@@ -191,7 +193,9 @@ export function loadConfig(
   const liveRaw = opt(env, 'FORCE_SYNC_LIVE_INTERVAL_S') ?? '30';
   const liveS = Number(liveRaw);
   if (!Number.isInteger(liveS) || liveS < 10 || liveS > 600) {
-    throw new ConfigError('FORCE_SYNC_LIVE_INTERVAL_S must be a whole number from 10 to 600 (default 30)');
+    throw new ConfigError(
+      'FORCE_SYNC_LIVE_INTERVAL_S must be a whole number from 10 to 600 (default 30)',
+    );
   }
 
   return {

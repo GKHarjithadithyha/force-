@@ -152,7 +152,8 @@ const FIRMWARE_RE = /^[0-9A-Za-z._-]{1,32}$/;
 const maxW = LIMITS.maxPowerW;
 const maxUw = LIMITS.maxPowerW * 1e6;
 /** Most steps possible in a span of time (rounded up to whole minutes, plus one). */
-const maxSteps = (ms: number) => (Math.ceil(Math.max(0, ms) / 60_000) + 1) * LIMITS.maxStepsPerMinute;
+const maxSteps = (ms: number) =>
+  (Math.ceil(Math.max(0, ms) / 60_000) + 1) * LIMITS.maxStepsPerMinute;
 /** Most energy possible in `recordedMs`: maximum power for the whole time, in Wh. */
 const maxWh = (recordedMs: number) => (maxW * recordedMs) / 3.6e6;
 
@@ -246,7 +247,12 @@ function parseMinute(x: unknown, path: string, b: Bounds): MinuteBucket {
     recordedMs,
     peakPowerUw: int(o.peakPowerUw, `${path}.peakPowerUw`, 0, maxUw),
     steps: int(o.steps, `${path}.steps`, 0, LIMITS.maxStepsPerMinute),
-    samples: int(o.samples, `${path}.samples`, 0, Math.ceil((LIMITS.maxSampleRateHz * LIMITS.maxMinuteRecordedMs) / 1000)),
+    samples: int(
+      o.samples,
+      `${path}.samples`,
+      0,
+      Math.ceil((LIMITS.maxSampleRateHz * LIMITS.maxMinuteRecordedMs) / 1000),
+    ),
     gapMs: num(o.gapMs, `${path}.gapMs`, 0, b.endedAt - b.startedAt + 60_000),
   };
 }
@@ -331,7 +337,8 @@ export function parseProfile(x: unknown, path: string): DeviceProfile {
     minPulseMs: n('minPulseMs'),
     minInputV: n('minInputV'),
     units: {
-      power: u.power === undefined ? d.units.power : oneOf(u.power, `${path}.units.power`, ['W', 'mW']),
+      power:
+        u.power === undefined ? d.units.power : oneOf(u.power, `${path}.units.power`, ['W', 'mW']),
       energy:
         u.energy === undefined
           ? d.units.energy
@@ -349,14 +356,20 @@ function parseDevice(x: unknown, path: string, now: number): DevicePayload {
   const deviceId = deviceIdOf(info.deviceId, `${path}.info.deviceId`);
   // the public name is always the device id (no free text in a public document)
   const firmwareVersion = str(info.firmwareVersion, `${path}.info.firmwareVersion`, 32);
-  if (!FIRMWARE_RE.test(firmwareVersion)) fail(`${path}.info.firmwareVersion`, 'is not a firmware version');
+  if (!FIRMWARE_RE.test(firmwareVersion))
+    fail(`${path}.info.firmwareVersion`, 'is not a firmware version');
   return {
     info: {
       deviceId,
       name: deviceId,
       firmwareVersion,
       sampleRateHz: int(info.sampleRateHz, `${path}.info.sampleRateHz`, 1, LIMITS.maxSampleRateHz),
-      sensorLimitMa: int(info.sensorLimitMa, `${path}.info.sensorLimitMa`, 1, LIMITS.maxSensorLimitMa),
+      sensorLimitMa: int(
+        info.sensorLimitMa,
+        `${path}.info.sensorLimitMa`,
+        1,
+        LIMITS.maxSensorLimitMa,
+      ),
     },
     lastSeenMs: time(o.lastSeenMs, `${path}.lastSeenMs`, now),
     profile: parseProfile(o.profile, `${path}.profile`),
@@ -396,16 +409,23 @@ function parseDaily(x: unknown, path: string, session: SessionRecord, now: numbe
     fail(path, 'day does not overlap the session');
   }
   const t = obj(o.totals, `${path}.totals`);
-  if (t.fromMs !== dayStartMs || t.toMs !== dayEndMs) fail(`${path}.totals`, 'range must be the day');
+  if (t.fromMs !== dayStartMs || t.toMs !== dayEndMs)
+    fail(`${path}.totals`, 'range must be the day');
   const recordedMs = num(t.recordedMs, `${path}.totals.recordedMs`, 0, len + 1000);
   const energyWh = num(t.energyWh, `${path}.totals.energyWh`, 0, maxWh(recordedMs) + 1e-12);
   const energyNj2 = intString(o.energyNj2, `${path}.energyNj2`);
   if (!close(Number(energyNj2) / 2e9 / 3600, energyWh)) {
     fail(`${path}.energyNj2`, 'does not match totals.energyWh');
   }
-  const factor = num(o.emissionFactorKgPerKwh, `${path}.emissionFactorKgPerKwh`, 0, LIMITS.maxEmissionFactor);
+  const factor = num(
+    o.emissionFactorKgPerKwh,
+    `${path}.emissionFactorKgPerKwh`,
+    0,
+    LIMITS.maxEmissionFactor,
+  );
   const co2 = num(o.co2AvoidedKg, `${path}.co2AvoidedKg`, 0);
-  if (!close(co2, (energyWh / 1000) * factor)) fail(`${path}.co2AvoidedKg`, 'does not match the energy');
+  if (!close(co2, (energyWh / 1000) * factor))
+    fail(`${path}.co2AvoidedKg`, 'does not match the energy');
   return {
     deviceId: session.deviceId,
     date,
@@ -473,10 +493,12 @@ export function parseLive(x: unknown, now: number): LivePayload {
   // Only the fields the Firestore document uses are kept; everything else is dropped.
   const snapshot = {
     t: time(s.t, 'snapshot.t', now),
-    lastPacketAt: s.lastPacketAt === null ? null : time(s.lastPacketAt, 'snapshot.lastPacketAt', now),
+    lastPacketAt:
+      s.lastPacketAt === null ? null : time(s.lastPacketAt, 'snapshot.lastPacketAt', now),
     source: 'device',
     connection: oneOf(s.connection, 'snapshot.connection', CONNECTION),
-    sessionId: s.sessionId === null ? null : sessionIdOf(s.sessionId, 'snapshot.sessionId', deviceId),
+    sessionId:
+      s.sessionId === null ? null : sessionIdOf(s.sessionId, 'snapshot.sessionId', deviceId),
     metrics: {
       measurementValid: bool(m.measurementValid, p('measurementValid')),
       inputPresent: bool(m.inputPresent, p('inputPresent')),
