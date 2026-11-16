@@ -3,7 +3,8 @@
  *
  *   npm run web:build && npm run hosting:config -w fedfront
  *
- * Run it with the same environment as the build (NEXT_PUBLIC_CLOUD_SYNC_URL). The repository-root
+ * Run it with the same environment as the build. NEXT_PUBLIC_DATA_SOURCE=cloud adds the Firestore
+ * REST origin to connect-src; a set NEXT_PUBLIC_CLOUD_SYNC_URL makes it fail (exit 1). The repository-root
  * firebase.json (Firestore rules and emulators) is a separate file and is not touched.
  *
  * Headers mirror the sync agent's static server (packages/cloud-agent/src/static.ts): inline
@@ -52,6 +53,27 @@ export function syncOrigin(syncUrl) {
   return new URL(raw).origin;
 }
 
+/** Public cloud viewer build (NEXT_PUBLIC_DATA_SOURCE=cloud): the page reads Firestore over REST. */
+export const FIRESTORE_ORIGIN = 'https://firestore.googleapis.com';
+
+export function isCloudMode(env = {}) {
+  return (env.NEXT_PUBLIC_DATA_SOURCE ?? '').trim() === 'cloud';
+}
+
+/**
+ * A public build must never depend on a visitor's localhost: a set NEXT_PUBLIC_CLOUD_SYNC_URL is
+ * an error here (throws), not a warning.
+ */
+export function assertPublicBuild(env = {}) {
+  const sync = (env.NEXT_PUBLIC_CLOUD_SYNC_URL ?? '').trim();
+  if (sync !== '') {
+    throw new Error(
+      'NEXT_PUBLIC_CLOUD_SYNC_URL is set. A public build must not point at the bench sync agent ' +
+        '(it only exists on that computer). Unset it and rebuild: npm run web:build.',
+    );
+  }
+}
+
 export function contentSecurityPolicy(hashes, extraConnect = []) {
   return [
     "default-src 'self'",
@@ -82,10 +104,10 @@ export function routeOf(htmlFile) {
 
 /** Firebase Hosting config for the export. `pages` is [{ file, html }], file relative to out/. */
 export function buildHostingConfig(pages, env = {}) {
-  const origin = syncOrigin(env.NEXT_PUBLIC_CLOUD_SYNC_URL);
+  assertPublicBuild(env);
   const csp = contentSecurityPolicy(
     inlineScriptHashes(pages.map((p) => p.html)),
-    origin ? [origin] : [],
+    isCloudMode(env) ? [FIRESTORE_ORIGIN] : [],
   );
   const noCache = [{ key: 'Cache-Control', value: 'no-cache' }];
   const routes = pages
@@ -135,13 +157,6 @@ async function main() {
   const pages = await Promise.all(
     files.map(async (f) => ({ file: relative(outDir, f), html: await readFile(f, 'utf8') })),
   );
-  const origin = syncOrigin(process.env.NEXT_PUBLIC_CLOUD_SYNC_URL);
-  if (origin) {
-    console.warn(
-      `warning: cloud sync points at ${origin}. A public deployment normally leaves ` +
-        'NEXT_PUBLIC_CLOUD_SYNC_URL unset; the sync agent runs only on the bench computer.',
-    );
-  }
   const config = buildHostingConfig(pages, process.env);
   await writeFile(join(FEDFRONT, 'firebase.json'), `${JSON.stringify(config, null, 2)}\n`);
   console.log(`wrote fedfront/firebase.json (${pages.length} pages)`);

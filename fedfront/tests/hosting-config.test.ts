@@ -1,7 +1,9 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
+  assertPublicBuild,
   buildHostingConfig,
+  isCloudMode,
   inlineScriptHashes,
   routeOf,
   syncOrigin,
@@ -47,12 +49,23 @@ describe('hosting config', () => {
     }
   });
 
-  it('allows the sync agent origin only when cloud sync is an absolute URL', () => {
+  it('parses the sync agent origin but a public build refuses any sync URL', () => {
     expect(syncOrigin(undefined)).toBeNull();
     expect(syncOrigin('/api/sync/v1')).toBeNull();
     expect(syncOrigin('http://127.0.0.1:8787/api/sync/v1')).toBe('http://127.0.0.1:8787');
-    const csp = header(rules({ NEXT_PUBLIC_CLOUD_SYNC_URL: 'http://127.0.0.1:8787/api/sync/v1' }).find((x) => x.source === '**'), 'Content-Security-Policy');
-    expect(csp).toContain("connect-src 'self' http://127.0.0.1:8787;");
+    for (const url of ['http://127.0.0.1:8787/api/sync/v1', '/api/sync/v1']) {
+      expect(() => rules({ NEXT_PUBLIC_CLOUD_SYNC_URL: url })).toThrow(/NEXT_PUBLIC_CLOUD_SYNC_URL/);
+    }
+    expect(() => assertPublicBuild({ NEXT_PUBLIC_CLOUD_SYNC_URL: '  ' })).not.toThrow();
+  });
+
+  it('adds the Firestore REST origin to connect-src only in cloud mode', () => {
+    const csp = (env: Record<string, string>) => header(rules(env).find((x) => x.source === '**'), 'Content-Security-Policy') ?? '';
+    expect(isCloudMode({ NEXT_PUBLIC_DATA_SOURCE: 'cloud' })).toBe(true);
+    expect(isCloudMode({})).toBe(false);
+    expect(csp({ NEXT_PUBLIC_DATA_SOURCE: 'cloud' })).toContain("connect-src 'self' https://firestore.googleapis.com;");
+    expect(csp({})).toContain("connect-src 'self';");
+    expect(csp({ NEXT_PUBLIC_DATA_SOURCE: 'local' })).not.toContain('googleapis');
   });
 
   it('maps exported files to clean routes', () => {
