@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Footprints, LayoutDashboard, Leaf, Zap } from 'lucide-react';
+import { Bike, Footprints, LayoutDashboard, Leaf, Zap } from 'lucide-react';
+import { ImpactView } from '@/components/impact-view';
 import { EnergyChart, TrafficChart } from '@/components/charts';
 import { ConnectionBanner } from '@/components/overview/connection-banner';
 import { DashboardHeader } from '@/components/overview/dashboard-header';
@@ -13,7 +14,8 @@ import type { CloudConfig, DailyRow, FetchResult, Freshness, LiveView } from '@/
 import type { ConnectionState, HistoryPoint } from '@/contracts';
 import type { Tone } from '@/lib/live';
 
-const ITEMS = [{ name: 'Overview', icon: LayoutDashboard }];
+const IMPACT = 'Real-World Impact'; const IMPACT_HASH = '#real-world-impact';
+const ITEMS = [{ name: 'Overview', icon: LayoutDashboard }, { name: IMPACT, icon: Bike }];
 const FRESH_LABEL: Record<Freshness, string> = { live: 'Live', stale: 'Stale', offline: 'Offline' };
 const FRESH_CONNECTION: Record<Freshness, ConnectionState> = { live: 'streaming', stale: 'stale', offline: 'idle' };
 const FRESH_TONE: Record<Freshness, Tone> = { live: 'good', stale: 'warn', offline: 'muted' };
@@ -62,6 +64,9 @@ const withUnit = (v: number | null | undefined, digits: number, unit: string) =>
 export function CloudDashboard() {
   const cfg = useMemo(() => readCloudConfig({ projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, deviceId: process.env.NEXT_PUBLIC_PUBLIC_DEVICE_ID }), []);
   const [now, setNow] = useState(() => Date.now()); const [kiosk, setKiosk] = useState(false); const [navOpen, setNavOpen] = useState(false);
+  const [page, setPage] = useState('Overview');
+  useEffect(() => { const sync = () => setPage(window.location.hash === IMPACT_HASH ? IMPACT : 'Overview'); sync(); window.addEventListener('hashchange', sync); return () => window.removeEventListener('hashchange', sync); }, []);
+  const navigate = useCallback((name: string) => { setPage(name); setNavOpen(false); window.history.replaceState(null, '', name === IMPACT ? IMPACT_HASH : window.location.pathname); }, []);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
   const config: CloudConfig | null = cfg.ok ? cfg.config : null;
 
@@ -94,10 +99,10 @@ export function CloudDashboard() {
   const glowing = usable && state === 'live' && view.generating;
 
   return <div className={`app-shell${kiosk ? ' kiosk' : ''}${state === 'stale' ? ' stale' : ''}${navOpen ? ' nav-open' : ''}`}>
-    <Sidebar items={ITEMS} page="Overview" brandExpansion={BRAND_EXPANSION} onNavigate={() => setNavOpen(false)}/>
+    <Sidebar items={ITEMS} page={page} brandExpansion={BRAND_EXPANSION} onNavigate={navigate}/>
     <button type="button" className="nav-scrim" aria-label="Close navigation" tabIndex={-1} onClick={() => setNavOpen(false)}/>
     <main className="main-area">
-      <DashboardHeader title="Intelligent Dashboard" subtitle="Stored energy and footstep data from the F.O.R.C.E. tile" now={new Date(now)} connection={state ? FRESH_CONNECTION[state] : 'idle'} statusLabel={state ? `${FRESH_LABEL[state]} · ${formatAge(age)}` : cfg.ok ? (live.checked || devices.checked ? 'No data yet' : 'Loading') : 'Not configured'} menuOpen={navOpen} onOpenMenu={open} onToggleKiosk={() => setKiosk(!kiosk)}/>
+      <DashboardHeader title={page === IMPACT ? IMPACT : 'Intelligent Dashboard'} subtitle={page === IMPACT ? 'Estimated equivalents of the energy this tile generated' : 'Stored energy and footstep data from the F.O.R.C.E. tile'} now={new Date(now)} connection={state ? FRESH_CONNECTION[state] : 'idle'} statusLabel={state ? `${FRESH_LABEL[state]} · ${formatAge(age)}` : cfg.ok ? (live.checked || devices.checked ? 'No data yet' : 'Loading') : 'Not configured'} menuOpen={navOpen} onOpenMenu={open} onToggleKiosk={() => setKiosk(!kiosk)}/>
       <div className="banners">
         {!cfg.ok && <ConnectionBanner tone="bad" alert>{cfg.message}</ConnectionBanner>}
         {forbidden && <ConnectionBanner tone="bad" alert>Cloud access not permitted (rules not deployed?)</ConnectionBanner>}
@@ -106,7 +111,7 @@ export function CloudDashboard() {
         {view && state !== 'live' && <ConnectionBanner tone="warn">{state === 'stale' ? 'Stale' : 'Offline'} · last data {formatAge(age)}. The device may be out of range or idle.</ConnectionBanner>}
         {view?.alerts.map((a, i) => <ConnectionBanner key={`${a.kind}-${i}`} tone={a.severity === 'error' ? 'bad' : a.severity === 'warning' ? 'warn' : 'info'}>{ALERT_TEXT[a.kind] ?? `Device alert: ${a.kind.replaceAll('_', ' ')}`}</ConnectionBanner>)}
       </div>
-      <div className="ov">
+      {page === IMPACT ? <ImpactView view={view} state={state} age={age} daily={daily.value} liveChecked={live.checked} noData={noData}/> : <div className="ov">
         <div className="ov-top">
           <section className="panel card ov-power" aria-label="Daily energy">
             <div className="card-head"><div><h2 className="panel-title">Energy Generated <span className="subdued">(Daily)</span></h2><p className="panel-subtitle">Stored daily totals, last 30 days{view ? ` · ${view.deviceId}` : ''}</p></div></div>
@@ -155,7 +160,7 @@ export function CloudDashboard() {
             <DailyTable rows={daily.value} loaded={daily.checked}/>
           </section>
         </div>
-      </div>
+      </div>}
     </main>
   </div>;
 }

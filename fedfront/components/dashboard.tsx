@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Footprints, Info, LayoutDashboard, Leaf, PanelTop, Settings, ShieldCheck, SlidersHorizontal, Sprout, Upload, Zap, Search } from 'lucide-react';
+import { Bike, Footprints, Info, LayoutDashboard, Leaf, PanelTop, Settings, ShieldCheck, SlidersHorizontal, Sprout, Upload, Zap, Search } from 'lucide-react';
 import { PowerOutputChart, EnergyChart, TrafficChart } from '@/components/charts';
 import { ConnectionBanner } from '@/components/overview/connection-banner';
 import { DashboardHeader } from '@/components/overview/dashboard-header';
@@ -13,16 +13,20 @@ import { createAppEngine } from '@/engine';
 import { getHistory, getTodayVsYesterday } from '@/lib/analytics';
 import type { DayTotals } from '@/lib/analytics';
 import { formatCo2, formatEnergy, formatPower, formatQuality, formatRecorded } from '@/lib/format';
-import { hasData, readingsUsable, sourceBanner } from '@/lib/live';
+import { hasData, inputStatus, readingsUsable, sourceBanner, tileState } from '@/lib/live';
+import { ImpactView } from '@/components/impact-view';
+import type { DailyRow, LiveView } from '@/lib/cloud-read';
 import { loadBrandExpansion, loadDisplayScaled } from '@/lib/preferences';
 import { scaleFor } from '@/lib/display-scale';
 import { useShallow } from 'zustand/react/shallow';
 import { useDashboard } from '@/stores/dashboard';
 import type { HistoryPoint, Range } from '@/contracts';
 import { OtherScreen } from '@/components/other-screen';
+import { format } from 'date-fns';
+import { startOfLocalDay } from '@/lib/analytics';
 
 const items = [
-  { name: 'Overview', icon: LayoutDashboard }, { name: 'Live', icon: Search }, { name: 'Sessions', icon: PanelTop }, { name: 'Connection', icon: ShieldCheck }, { name: 'Export Data', icon: Upload }, { name: 'Calibration', icon: SlidersHorizontal }, { name: 'Settings', icon: Settings },
+  { name: 'Overview', icon: LayoutDashboard }, { name: 'Live', icon: Search }, { name: 'Sessions', icon: PanelTop }, { name: 'Connection', icon: ShieldCheck }, { name: 'Export Data', icon: Upload }, { name: 'Calibration', icon: SlidersHorizontal }, { name: 'Settings', icon: Settings }, { name: 'Real-World Impact', icon: Bike },
 ];
 /** Simulated faults the mock engine can inject (mock mode only, for testing every UI state). */
 const FAULTS = ['drop', 'stale', 'duplicate', 'reorder', 'restart', 'clip', 'sensor_fault', 'malformed', 'bad_voltage'] as const;
@@ -39,6 +43,7 @@ export function Dashboard() {
   const [days, setDays] = useState<DayTotals | null>(null);
   const [fault, setFault] = useState('');
   const [totalsError, setTotalsError] = useState<string | null>(null);
+  const [allTimeWh, setAllTimeWh] = useState<number | null>(null);
   const lastSession = useRef<string | null>(null);
   useEffect(() => { const interval = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(interval); }, []);
   useEffect(() => {
@@ -61,6 +66,7 @@ export function Dashboard() {
     const load = () => {
       void getHistory(engine, range.toLowerCase() as Range).then((h) => { if (alive) { setHistory(h); setTotalsError(null); } }).catch(fail);
       void getTodayVsYesterday(engine, profile).then((d) => { if (alive) setDays(d); }).catch(fail);
+      void engine.getTotals(0, Date.now()).then((t) => { if (alive) setAllTimeWh(t.energyWh); }).catch(fail);
     };
     load(); const timer = setInterval(load, TOTALS_REFRESH_MS);
     return () => { alive = false; clearInterval(timer); };
@@ -83,8 +89,18 @@ export function Dashboard() {
   const banner = sourceBanner(snapshot);
   const glowing = usable && (metrics?.powerW ?? 0) > (profile?.idleThresholdW ?? 0);
   const stepsText = stale ? 'No data' : stepsValue?.toLocaleString() ?? '—';
+  // Real-World Impact on the bench: the same real-device values the engine holds (no cloud read, no new data path), shown through the display calibration when it is on.
+  const impactView: LiveView | null = live && snapshot && metrics ? {
+    deviceId: engine?.getDeviceInfo()?.deviceId ?? 'FORCE device', connection, sampleAtMs: snapshot.t, lastPacketAtMs: snapshot.lastPacketAt,
+    measurementValid: metrics.measurementValid, inputPresent: inputStatus(snapshot).value === 'Present', generating: glowing,
+    measured: usable ? { voltageV: metrics.voltageV * k, currentMa: metrics.currentMa, powerW: metrics.powerW * k } : null,
+    rssiDbm: null, sessionEnergyWh: sc(metrics.sessionEnergyWh) ?? null, totalEnergyWh: sc(allTimeWh) ?? null, peakPowerW: null, steps: metrics.steps, cadenceSpm: null, co2AvoidedKg: null, alerts: [],
+  } : null;
+  const impactState = !live ? null : connection === 'streaming' ? 'live' : connection === 'stale' ? 'stale' : 'offline';
+  const impactAge = snapshot?.lastPacketAt != null ? Math.max(0, now.getTime() - snapshot.lastPacketAt) : null;
+  const impactDaily: DailyRow[] | null = days ? [{ date: format(new Date(days.today.fromMs ?? startOfLocalDay(now.getTime())), 'yyyy-MM-dd'), dayStartMs: null, steps: days.today.steps, energyWh: sc(days.today.energyWh) ?? 0, peakPowerW: Number.NaN, sessions: 0, co2AvoidedKg: null }] : null;
   const title = page === 'Overview' ? 'Intelligent Dashboard' : page;
-  const subtitle = page === 'Overview' ? 'Real-time monitoring of energy generation and system performance' : page === 'Live' ? 'Real-time power, voltage and footstep activity' : 'Florix Energy device and session management';
+  const subtitle = page === 'Overview' ? 'Real-time monitoring of energy generation and system performance' : page === 'Live' ? 'Real-time power, voltage and footstep activity' : page === 'Real-World Impact' ? 'Estimated equivalents of the energy this tile generated' : 'Florix Energy device and session management';
   return <div className={`app-shell${kiosk ? ' kiosk' : ''}${stale ? ' stale' : ''}${navOpen ? ' nav-open' : ''}`}>
     <Sidebar items={items} page={page} brandExpansion={brandExpansion} onNavigate={activeNav}/>
     <button type="button" className="nav-scrim" aria-label="Close navigation" tabIndex={-1} onClick={() => setNavOpen(false)}/>
@@ -99,6 +115,9 @@ export function Dashboard() {
         {snapshot?.alerts.map((alert) => <ConnectionBanner key={alert.id} tone={alert.severity === 'error' ? 'bad' : alert.severity === 'warning' ? 'warn' : 'info'} alert={alert.severity === 'error'}>{alert.message}</ConnectionBanner>)}
       </div>
       {page === 'Overview' ? <div className="ov">
+        <section className="panel live-strip" aria-label="Live readings">
+          {([['Voltage', usable && metrics ? `${(metrics.voltageV * k).toFixed(2)} V` : '—'], ['Current', usable && metrics ? `${metrics.currentMa.toFixed(1)} mA` : '—'], ['Power', usable ? `${power.value} ${power.unit}`.trim() : '—'], ['Session energy', live ? `${formatEnergy(sc(metrics?.sessionEnergyWh)).value} ${formatEnergy(sc(metrics?.sessionEnergyWh)).unit}`.trim() : '—'], ['Device', tileState(snapshot, connection)]] as Array<[string, string]>).map(([label, value]) => <div key={label} className="live-cell"><span>{label}</span><strong>{value}</strong></div>)}
+        </section>
         <div className="ov-top">
           <section className="panel card ov-power" aria-label="Power output">
             <div className="card-head"><div><h2 className="panel-title">Power Output <span className="subdued">(Real-time)</span></h2><p className="panel-subtitle">Measured power over time, in watts</p></div>
@@ -121,7 +140,7 @@ export function Dashboard() {
           <ChartCard title="Foot Traffic" range={range} tabs={tabs} onRange={setRange}><TrafficChart history={history} range={range}/></ChartCard>
           <DeviceHealth snapshot={snapshot} connection={connection}/>
         </div>
-      </div> : <OtherScreen name={page} engine={engine} connection={connection} snapshot={snapshot} />}
+      </div> : page === 'Real-World Impact' ? <ImpactView view={impactView} state={impactState} age={impactAge} daily={impactDaily} liveChecked noData={!live}/> : <OtherScreen name={page} engine={engine} connection={connection} snapshot={snapshot} />}
     </main>
     {app?.injectFault && <div className="dev-panel"><strong>MOCK</strong><label htmlFor="inject-fault">Inject fault</label><select id="inject-fault" value={fault} onChange={(e) => { const kind = e.target.value; setFault(''); if (kind) { try { app.injectFault?.({ kind, durationMs: kind === 'stale' ? 8000 : 3000 } as Parameters<NonNullable<typeof app.injectFault>>[0], 0); } catch { /* not streaming */ } } }}><option value="">Choose…</option>{FAULTS.map((f) => <option key={f} value={f}>{f}</option>)}</select></div>}
   </div>;
