@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.Force" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/force_bg</item>
+        <item name="android:statusBarColor">@color/force_bg</item>
+        <item name="android:navigationBarColor">@color/force_bg</item>
+    </style>
+</resources>
