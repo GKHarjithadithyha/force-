@@ -1,0 +1,9 @@
+{
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_DATA_SOURCE": "cloud",
+      "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "force-ce2a1",
+      "NEXT_PUBLIC_PUBLIC_DEVICE_ID": "FORCE-71B6"
+    }
+  }
+}
